@@ -1,0 +1,13 @@
+.git
+.next
+.next-e2e
+node_modules
+.env
+.env.*
+!.env.example
+.claude
+tests
+test-results
+playwright-report
+docker-compose.yml
+README.md

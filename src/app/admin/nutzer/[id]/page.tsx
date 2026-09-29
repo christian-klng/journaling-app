@@ -1,0 +1,110 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AutoSubmitSelect } from "@/components/admin/auto-submit-select";
+import { ConfirmForm } from "@/components/admin/confirm-form";
+import { ExportLink } from "@/components/admin/export-link";
+import { ResetPassword } from "@/components/admin/reset-password";
+import { EntryView } from "@/components/entry-view";
+import { Button, Card } from "@/components/ui";
+import { assignTeam, retryEntry, setRole } from "@/lib/admin/actions";
+import { getMember, listEntriesForAdmin, listTeams } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/auth/guards";
+import { isUuid, toEntryDto } from "@/lib/entries";
+import { formatDate, formatShortDate } from "@/lib/format";
+
+export const metadata: Metadata = { title: "Person" };
+
+export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[id]">) {
+  const me = await requireAdmin();
+  const { id } = await params;
+  const member = isUuid(id) ? await getMember(id) : null;
+  if (!member) notFound();
+
+  const [teams, entries] = await Promise.all([listTeams(), listEntriesForAdmin(member.id)]);
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <Link href="/admin" className="text-sm text-muted hover:text-foreground">
+          ← Übersicht
+        </Link>
+        <h1 className="text-xl font-semibold">{member.displayName}</h1>
+        <p className="text-sm text-muted">
+          Dabei seit {formatShortDate(member.createdAt)}
+          {member.role === "admin" && " · Admin"}
+        </p>
+      </div>
+
+      <Card className="space-y-4">
+        {member.role === "user" && (
+          <form action={assignTeam.bind(null, member.id)} className="space-y-1.5">
+            <span className="text-sm font-medium">Team</span>
+            <AutoSubmitSelect
+              name="teamId"
+              label="Team"
+              defaultValue={member.teamId ?? ""}
+              options={[
+                { value: "", label: "Ohne Team" },
+                ...teams.map((team) => ({ value: team.id, label: team.name })),
+              ]}
+            />
+          </form>
+        )}
+        {member.id !== me.id && (
+          <div className="flex flex-wrap gap-2">
+            <ResetPassword userId={member.id} displayName={member.displayName} />
+            {member.role === "user" && (
+              <ConfirmForm
+                action={setRole.bind(null, member.id, "admin")}
+                message={`${member.displayName} zum Admin machen? Admins sehen alle Einträge aller Personen.`}
+              >
+                <Button type="submit" variant="ghost" size="sm">
+                  Zum Admin machen
+                </Button>
+              </ConfirmForm>
+            )}
+          </div>
+        )}
+      </Card>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-medium text-muted">
+          {entries.length === 1 ? "1 Eintrag" : `${entries.length} Einträge`}
+        </h2>
+        {entries.length > 0 && <ExportLink query={`?user=${member.id}`} label="Einträge exportieren" />}
+      </div>
+
+      {entries.length === 0 && <p className="text-muted">Diese Person hat noch nichts aufgenommen.</p>}
+
+      {entries.map((entry, index) => {
+        const dto = toEntryDto(entry);
+        const stuck =
+          !dto.pending && (dto.summaryFailed || entry.recordings.some((r) => r.status === "failed"));
+        return (
+          <details key={entry.id} open={index === 0} className="group space-y-4">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 border-b border-border [&::-webkit-details-marker]:hidden">
+              <span aria-hidden className="text-muted transition-transform group-open:rotate-90">
+                ›
+              </span>
+              <h3 className="flex-1 font-semibold">{formatDate(entry.createdAt)}</h3>
+              <span className="text-sm text-muted">
+                {entry.recordings.length === 1 ? "1 Aufnahme" : `${entry.recordings.length} Aufnahmen`}
+              </span>
+            </summary>
+            <div className="space-y-4 pt-4">
+              <EntryView key={`${dto.recordings.length}-${dto.pending}`} initial={dto} />
+              {stuck && (
+                <form action={retryEntry.bind(null, entry.id)}>
+                  <Button type="submit" variant="secondary" size="sm">
+                    Verarbeitung erneut starten
+                  </Button>
+                </form>
+              )}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  );
+}

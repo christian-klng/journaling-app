@@ -1,0 +1,33 @@
+# Lokale Entwicklungsumgebung: Postgres + S3-kompatibler Speicher
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: journal
+      POSTGRES_PASSWORD: journal
+      POSTGRES_DB: journal
+    ports:
+      - "54329:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U journal"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # S3-kompatibler Speicher für lokal (Versity Gateway), ersetzt den Railway Bucket
+  s3:
+    image: versity/versitygw:latest
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /data/journal-audio && exec versitygw --port :7070 posix /data"]
+    environment:
+      ROOT_ACCESS_KEY: journal
+      ROOT_SECRET_KEY: journal-secret
+    ports:
+      - "9010:7070"
+    volumes:
+      - s3data:/data
+
+volumes:
+  pgdata:
+  s3data:
