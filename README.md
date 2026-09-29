@@ -97,8 +97,15 @@ und Beispieltexte statt der KI.
 
 ## Deployment auf Railway
 
-Das Repository enthält `Dockerfile` und `railway.json`. Migrationen laufen vor jedem Deployment
-automatisch, der Healthcheck liegt unter `/api/health`.
+Gebaut wird aus dem `Dockerfile`. Railway liest für neue Dienste keine `railway.json` mehr, die
+folgenden Einstellungen stehen deshalb direkt am Dienst (Settings):
+
+| Einstellung | Wert |
+|---|---|
+| Pre-Deploy Command | `node scripts/migrate.mjs` |
+| Healthcheck Path | `/api/health` |
+| Healthcheck Timeout | 120 Sekunden |
+| Restart Policy | On Failure, 5 Versuche |
 
 1. Projekt in der Region **EU West** anlegen.
 2. **Postgres** hinzufügen.
@@ -107,16 +114,16 @@ automatisch, der Healthcheck liegt unter `/api/health`.
 
    ```
    DATABASE_URL=${{Postgres.DATABASE_URL}}
-   S3_ENDPOINT=${{Bucket.ENDPOINT}}
-   S3_REGION=${{Bucket.REGION}}
-   S3_BUCKET=${{Bucket.BUCKET}}
-   S3_ACCESS_KEY_ID=${{Bucket.ACCESS_KEY_ID}}
-   S3_SECRET_ACCESS_KEY=${{Bucket.SECRET_ACCESS_KEY}}
+   S3_ENDPOINT=${{audio.ENDPOINT}}
+   S3_REGION=${{audio.REGION}}
+   S3_BUCKET=${{audio.BUCKET}}
+   S3_ACCESS_KEY_ID=${{audio.ACCESS_KEY_ID}}
+   S3_SECRET_ACCESS_KEY=${{audio.SECRET_ACCESS_KEY}}
    CORTECS_API_KEY=…
    ADMIN_EMAILS=…
    ```
 
-   `Postgres` und `Bucket` stehen für die Namen der beiden Dienste im Projekt.
+   `Postgres` und `audio` sind die Namen von Datenbank und Bucket im Projekt.
 5. Eine öffentliche Domain erzeugen.
 6. **Direkt nach dem ersten Deployment** mit der Adresse aus `ADMIN_EMAILS` registrieren. E-Mail-Adressen
    werden nicht verifiziert. Wer sich zuerst mit dieser Adresse registriert, wird Admin.
