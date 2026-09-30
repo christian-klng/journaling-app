@@ -26,8 +26,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - ZIP-Export für alles, ein Team oder eine Person.
 - Passwort zurücksetzen: Ein Einmal-Passwort wird einmalig angezeigt und gilt 72 Stunden. Die
   Person muss danach ein eigenes Passwort vergeben.
-- Admins sehen nur Fantasienamen. E-Mail-Adressen erscheinen weder in der Oberfläche noch im Export.
-  Ein Konto lässt sich über die exakte E-Mail-Adresse finden, ohne dass die Adresse angezeigt wird.
+- In der Übersicht und im Export erscheinen nur Fantasienamen. Die E-Mail-Adresse einer Person
+  steht auf ihrer Seite im Admin-Bereich; ein Konto lässt sich auch über die Adresse finden.
 
 ## Technik
 
@@ -137,8 +137,8 @@ Prozess und nimmt nach einem Neustart liegen gebliebene Aufnahmen selbst wieder 
 - Bei der Registrierung willigen Nutzer ein, dass ihre Aufnahmen gespeichert, per KI verarbeitet
   und von der wissenschaftlichen Begleitung eingesehen werden.
 - Audio und Texte liegen in der EU (Railway EU West). Cortecs leitet nur an Anbieter in der EU weiter.
-- Die Begleitung sieht Fantasienamen. Wer für einen Passwort-Reset seine E-Mail-Adresse oder
-  seinen Fantasienamen nennt, gibt sich gegenüber dieser Person zu erkennen.
+- Andere Teilnehmende sehen nur Fantasienamen. Die Begleitung sieht auf der Personenseite auch
+  die E-Mail-Adresse; der Export enthält keine Adressen.
 - Nutzer können Einträge derzeit nicht selbst löschen. Löschwünsche müssen über die Datenbank
   erfüllt werden.
 

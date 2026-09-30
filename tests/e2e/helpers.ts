@@ -10,7 +10,7 @@ export const uniqueEmail = (prefix: string) =>
 
 export async function register(page: Page, email: string, team?: string) {
   await page.goto("/registrieren");
-  await page.getByLabel("E-Mail-Adresse").fill(email);
+  await page.getByRole("textbox", { name: "E-Mail-Adresse" }).fill(email);
   await page.getByLabel("Passwort").fill(PASSWORD);
   if (team) await page.getByLabel("Team").selectOption({ label: team });
   await page.getByRole("checkbox").check();
@@ -19,7 +19,7 @@ export async function register(page: Page, email: string, team?: string) {
 
 export async function login(page: Page, email: string, password = PASSWORD) {
   await page.goto("/login");
-  await page.getByLabel("E-Mail-Adresse").fill(email);
+  await page.getByRole("textbox", { name: "E-Mail-Adresse" }).fill(email);
   await page.getByLabel("Passwort").fill(password);
   await page.getByRole("button", { name: "Anmelden" }).click();
 }

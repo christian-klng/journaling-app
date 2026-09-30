@@ -31,7 +31,8 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
         </Link>
         <h1 className="text-xl font-semibold">{member.displayName}</h1>
         <p className="text-sm text-muted">
-          Dabei seit {formatShortDate(member.createdAt)}
+          <span className="select-all">{member.email}</span>
+          {" · "}Dabei seit {formatShortDate(member.createdAt)}
           {member.role === "admin" && " · Admin"}
         </p>
       </div>

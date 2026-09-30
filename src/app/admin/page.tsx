@@ -40,8 +40,7 @@ export default async function AdminHome() {
         <div className="space-y-1">
           <h2 className="font-semibold">Konto über die E-Mail-Adresse finden</h2>
           <p className="text-sm text-muted">
-            Für den Fall, dass jemand sein Passwort und seinen Fantasienamen vergessen hat. Die
-            Adresse wird nur abgeglichen und nirgends angezeigt.
+            Für den Fall, dass jemand sein Passwort und seinen Fantasienamen vergessen hat.
           </p>
         </div>
         <EmailLookup />

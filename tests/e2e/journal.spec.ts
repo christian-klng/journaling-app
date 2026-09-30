@@ -99,7 +99,7 @@ test("Ohne Anmeldung geht nichts", async ({ page }) => {
   expect((await page.request.get(`/api/entries/${entryUrl.split("/").pop()}`)).status()).toBe(401);
 });
 
-test("Admin sieht die Person im Team, aber keine E-Mail-Adresse", async ({ page }) => {
+test("Admin sieht die Person im Team, die E-Mail-Adresse nur auf ihrer Seite", async ({ page }) => {
   await loginAsAdmin(page);
 
   const team = page.locator("details").filter({ has: page.getByRole("heading", { name: TEAM }) });
@@ -110,7 +110,7 @@ test("Admin sieht die Person im Team, aber keine E-Mail-Adresse", async ({ page 
   await expect(page.getByRole("heading", { name: userName })).toBeVisible();
   await expect(page.locator("audio")).toHaveCount(2);
   await expect(page.getByText("Das ist ein Beispieltranskript.").first()).toBeVisible();
-  await expect(page.getByText("@example.test")).toHaveCount(0);
+  await expect(page.getByText(userEmail)).toBeVisible();
 });
 
 test("Admin exportiert die Einträge als ZIP", async ({ page }) => {

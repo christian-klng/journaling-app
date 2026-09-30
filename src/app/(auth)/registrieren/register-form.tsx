@@ -44,7 +44,7 @@ export function RegisterForm({ teams }: { teams: { id: string; name: string }[] 
         <span>
           Ich bin einverstanden, dass meine Aufnahmen gespeichert, von einer KI in der EU
           transkribiert und zusammengefasst werden und dass die wissenschaftliche Begleitung sie
-          unter meinem Fantasienamen anhören und lesen kann.
+          anhören und lesen sowie meine E-Mail-Adresse einsehen kann.
         </span>
       </label>
       <ErrorMessage>{state?.error}</ErrorMessage>

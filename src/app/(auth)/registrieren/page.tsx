@@ -23,8 +23,8 @@ export default async function RegisterPage() {
       <div className="space-y-2">
         <h1 className="text-xl font-semibold">Konto anlegen</h1>
         <p className="text-sm text-muted">
-          Du bekommst einen zufälligen Fantasienamen. Deine E-Mail-Adresse dient nur der Anmeldung
-          und ist für niemanden sichtbar.
+          Du bekommst einen zufälligen Fantasienamen. Deine E-Mail-Adresse dient der Anmeldung und
+          ist nur für die wissenschaftliche Begleitung sichtbar, nicht für andere Teilnehmende.
         </p>
       </div>
       <RegisterForm teams={allTeams} />
