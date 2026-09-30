@@ -37,7 +37,10 @@ test("Nutzer registriert sich und bekommt einen Fantasienamen", async ({ page })
   userName = await displayName(page);
   expect(userName).toMatch(/^\p{Lu}\p{L}+ \p{Lu}\p{L}+( \d+)?$/u);
   await expect(page.getByText(`Dein Name hier ist ${userName}`)).toBeVisible();
-  await expect(page.getByText(userEmail)).toHaveCount(0);
+  // Die eigene Adresse sieht nur die Person selbst: im Willkommenstext und im Menü
+  await expect(page.getByText(`Angemeldet bist du als ${userEmail}`)).toBeVisible();
+  await page.getByRole("button", { name: /^Menü für/ }).click();
+  await expect(page.getByRole("menu")).toContainText(userEmail);
 });
 
 test("Nutzer nimmt einen Eintrag auf und setzt ihn fort", async ({ page }) => {

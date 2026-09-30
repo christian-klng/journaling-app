@@ -17,7 +17,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       {params.willkommen && (
         <Notice>
           Willkommen! Dein Name hier ist <strong>{user.displayName}</strong>. Unter diesem Namen
-          sieht die wissenschaftliche Begleitung deine Einträge.
+          sieht die wissenschaftliche Begleitung deine Einträge. Angemeldet bist du als{" "}
+          {user.email}.
         </Notice>
       )}
       {params.passwort && <Notice>Dein Passwort wurde geändert.</Notice>}

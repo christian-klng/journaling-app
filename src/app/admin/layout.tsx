@@ -8,6 +8,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     <>
       <AppHeader
         displayName={admin.displayName}
+        email={admin.email}
         home="/admin"
         nav={[
           { href: "/admin", label: "Übersicht" },
