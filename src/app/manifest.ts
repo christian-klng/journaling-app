@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Rückblick – Audio-Tagebuch",
-    short_name: "Rückblick",
+    name: "Journaling – Audio-Tagebuch",
+    short_name: "Journaling",
     description: "Dein Audio-Tagebuch für Projekt- und Gründungsarbeit.",
     start_url: "/",
     display: "standalone",

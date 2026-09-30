@@ -111,6 +111,13 @@ export const recordings = pgTable(
   (t) => [uniqueIndex("recordings_entry_position_idx").on(t.entryId, t.position)],
 );
 
+/** Von Admins in der App gepflegte Einstellungen, z. B. der Hinweistext für die Transkription. */
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const teamsRelations = relations(teams, ({ many }) => ({ users: many(users) }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({

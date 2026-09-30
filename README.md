@@ -1,4 +1,4 @@
-# Rückblick – Audio-Tagebuch
+# Journaling – Audio-Tagebuch
 
 Web-App für regelmäßige, gesprochene Rückblicke auf Projekt- oder Gründungsarbeit. Nutzer sprechen
 einen Eintrag ein, die App transkribiert ihn und fasst ihn in drei Stichpunkten zusammen. Admins
@@ -24,6 +24,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Teams anlegen, umbenennen, löschen. Personen einem Team zuordnen.
 - Einträge jeder Person lesen und anhören.
 - ZIP-Export für alles, ein Team oder eine Person.
+- Hinweistext für die Transkription pflegen (unter „Einstellungen"): Namen, Fachbegriffe und
+  Abkürzungen, die das Modell richtig schreiben soll.
 - Passwort zurücksetzen: Ein Einmal-Passwort wird einmalig angezeigt und gilt 72 Stunden. Die
   Person muss danach ein eigenes Passwort vergeben.
 - In der Übersicht und im Export erscheinen nur Fantasienamen. Die E-Mail-Adresse einer Person

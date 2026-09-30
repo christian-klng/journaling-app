@@ -11,6 +11,7 @@ import { db } from "@/lib/db";
 import { entries, recordings, teams, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { processRecording, summarizeEntry } from "@/lib/pipeline";
+import { setSetting, TRANSCRIPTION_PROMPT_KEY, TRANSCRIPTION_PROMPT_MAX_LENGTH } from "@/lib/settings";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
 
@@ -122,6 +123,23 @@ export async function findByEmail(_state: LookupState, formData: FormData): Prom
     .from(users)
     .where(eq(users.email, parsed.data));
   return found ? { found } : { error: "Zu dieser Adresse gibt es kein Konto." };
+}
+
+export async function saveTranscriptionPrompt(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await assertAdmin();
+  const parsed = z
+    .string()
+    .trim()
+    .max(TRANSCRIPTION_PROMPT_MAX_LENGTH, `Höchstens ${TRANSCRIPTION_PROMPT_MAX_LENGTH} Zeichen.`)
+    .safeParse(formData.get("prompt"));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  await setSetting(TRANSCRIPTION_PROMPT_KEY, parsed.data);
+  revalidatePath("/admin/einstellungen");
+  return { ok: true };
 }
 
 /** Stößt die Verarbeitung eines Eintrags neu an, wenn Transkription oder Zusammenfassung hängen. */

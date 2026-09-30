@@ -22,7 +22,11 @@ const routing = () => ({
   enable_model_fallback: true,
 });
 
-export async function transcribe(mp3Path: string): Promise<string> {
+/**
+ * @param prompt Optionaler Hinweistext im Stil des erwarteten Transkripts (Namen, Fachbegriffe).
+ *   Whisper übernimmt daraus Schreibweisen und Stil.
+ */
+export async function transcribe(mp3Path: string, prompt?: string | null): Promise<string> {
   if (isMock()) {
     return "Das ist ein Beispieltranskript. Diese Woche haben wir den Prototyp fertiggestellt und erste Rückmeldungen gesammelt.";
   }
@@ -32,6 +36,7 @@ export async function transcribe(mp3Path: string): Promise<string> {
     file: createReadStream(mp3Path),
     model: process.env.CORTECS_TRANSCRIPTION_MODEL ?? "whisper-large-v3",
     ...(language ? { language } : {}),
+    ...(prompt ? { prompt } : {}),
     ...routing(),
   } as OpenAI.Audio.TranscriptionCreateParamsNonStreaming);
 

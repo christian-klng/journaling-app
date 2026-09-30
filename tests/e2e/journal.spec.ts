@@ -175,6 +175,19 @@ test("Admin setzt das Passwort zurück, Nutzer muss ein neues vergeben", async (
   await expect(page.getByText("E-Mail-Adresse oder Passwort stimmen nicht.")).toBeVisible();
 });
 
+test("Admin pflegt den Hinweistext für die Transkription", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.getByRole("link", { name: "Einstellungen" }).click();
+  const field = page.getByLabel("Hinweistext für die Transkription");
+  const text = `Wöchentlicher Rückblick, Themen: MVP, OKRs, Pitch-Deck. Stand ${Date.now()}`;
+  await field.fill(text);
+  await page.getByRole("button", { name: "Speichern" }).click();
+  await expect(page.getByRole("status")).toContainText("Gespeichert");
+
+  await page.reload();
+  await expect(page.getByLabel("Hinweistext für die Transkription")).toHaveValue(text);
+});
+
 test("Admin ordnet die Person einem anderen Team zu", async ({ page }) => {
   await loginAsAdmin(page);
   await page.getByRole("link", { name: new RegExp(userName) }).click();

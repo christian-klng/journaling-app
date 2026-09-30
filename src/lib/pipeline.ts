@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { entries, recordings } from "@/lib/db/schema";
 import { convertToMp3 } from "./audio";
 import { summarize, transcribe } from "./cortecs";
+import { getTranscriptionPrompt } from "./settings";
 import { getObjectStream, putFile } from "./storage";
 
 const MAX_ATTEMPTS = 3;
@@ -49,7 +50,7 @@ export async function processRecording(recordingId: string) {
       .set({ storageKeyMp3, durationSeconds: durationSeconds ?? recording.durationSeconds })
       .where(eq(recordings.id, recordingId));
 
-    const transcript = await transcribe(mp3Path);
+    const transcript = await transcribe(mp3Path, await getTranscriptionPrompt());
     await db
       .update(recordings)
       .set({ transcript, status: "done", updatedAt: new Date() })

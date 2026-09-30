@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         nav={[
           { href: "/admin", label: "Übersicht" },
           { href: "/admin/teams", label: "Teams" },
+          { href: "/admin/einstellungen", label: "Einstellungen" },
         ]}
       />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
