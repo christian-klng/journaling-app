@@ -8,6 +8,7 @@ import * as z from "zod";
 import { db } from "@/lib/db";
 import { teams, users } from "@/lib/db/schema";
 import { generateUniqueName } from "@/lib/names";
+import { isAdminEmail } from "./admin-emails";
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 import { clearAttempts, recordFailedAttempt, tooManyAttempts } from "./rate-limit";
 import { createSession, destroyAllSessions, destroySession, getSessionUser } from "./session";
@@ -19,14 +20,6 @@ const password = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `Das Passwort braucht mindestens ${MIN_PASSWORD_LENGTH} Zeichen.`)
   .max(200, "Das Passwort ist zu lang.");
-
-function isAdminEmail(address: string) {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-    .includes(address);
-}
 
 async function clientIp() {
   const forwarded = (await headers()).get("x-forwarded-for");
