@@ -4,11 +4,13 @@ import { useActionState } from "react";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
 import { changePassword } from "@/lib/auth/actions";
 
-export function ChangePasswordForm({ forced }: { forced: boolean }) {
+export function ChangePasswordForm({ forced, username }: { forced: boolean; username: string }) {
   const [state, action, pending] = useActionState(changePassword, undefined);
 
   return (
     <form action={action} className="space-y-4">
+      {/* Damit Passwort-Manager das neue Passwort dem richtigen Benutzernamen zuordnen */}
+      <input type="text" name="username" value={username} autoComplete="username" readOnly hidden />
       {!forced && (
         <Field label="Aktuelles Passwort">
           <input

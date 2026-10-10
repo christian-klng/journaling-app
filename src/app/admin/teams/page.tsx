@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ConfirmForm } from "@/components/admin/confirm-form";
+import { CreateAdmin } from "@/components/admin/create-admin";
 import { CreateTeamForm, TeamRow } from "@/components/admin/team-forms";
 import { Button, Card } from "@/components/ui";
-import { setRole } from "@/lib/admin/actions";
+import { deleteAdmin } from "@/lib/admin/actions";
 import { listAdmins, listTeams } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 
@@ -36,12 +37,14 @@ export default async function TeamsPage() {
       </Card>
 
       <Card className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="font-semibold">Admins</h2>
-          <p className="text-sm text-muted">
-            Admins sehen alle Einträge. Weitere Admins ernennst du auf der Seite der jeweiligen
-            Person.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h2 className="font-semibold">Admins</h2>
+            <p className="text-sm text-muted">
+              Admins sehen alle Einträge. Ihre Konten sind getrennt von denen der Teilnehmenden.
+            </p>
+          </div>
+          <CreateAdmin />
         </div>
         <ul className="divide-y divide-border">
           {admins.map((admin) => (
@@ -52,11 +55,11 @@ export default async function TeamsPage() {
               </span>
               {admin.id !== me.id && (
                 <ConfirmForm
-                  action={setRole.bind(null, admin.id, "user")}
-                  message={`${admin.displayName} die Admin-Rechte entziehen?`}
+                  action={deleteAdmin.bind(null, admin.id)}
+                  message={`Das Admin-Konto ${admin.displayName} löschen?`}
                 >
                   <Button type="submit" variant="ghost" size="sm">
-                    Admin-Rechte entziehen
+                    Konto löschen
                   </Button>
                 </ConfirmForm>
               )}

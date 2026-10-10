@@ -29,11 +29,6 @@ export function entryFolder(input: {
 
 export const recordingBaseName = (position: number) => `aufnahme-${pad(position)}`;
 
-export function summaryText(summary: string[] | null) {
-  if (!summary?.length) return "Noch keine Zusammenfassung vorhanden.\n";
-  return summary.map((point) => `- ${point}`).join("\n") + "\n";
-}
-
 // Tabellenprogramme führen Zellen aus, die mit diesen Zeichen beginnen, als Formel aus
 const FORMULA_START = /^[=+\-@\t\r]/;
 

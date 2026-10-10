@@ -15,7 +15,8 @@ export default async function LoginPage() {
       <h1 className="text-xl font-semibold">Anmelden</h1>
       <LoginForm />
       <p className="text-sm text-muted">
-        Passwort vergessen? Wende dich an deine Begleitperson. Sie kann dir ein Einmal-Passwort geben.
+        Dein Benutzername ist dein Fantasiename. Passwort oder Namen vergessen? Wende dich an deine
+        Begleitperson. Sie kann dir ein Einmal-Passwort geben.
       </p>
       <p className="text-sm">
         Noch kein Konto?{" "}

@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { removePending, savePending, uploadRecording, type PendingUpload } from "@/lib/client/pending-uploads";
 import { formatClock } from "@/lib/format";
-import { Spinner, Summary } from "./summary";
-import { Button, buttonClass, ErrorMessage } from "./ui";
+import { Button, buttonClass, ErrorMessage, Spinner } from "./ui";
 import { useLiveEntry } from "./use-live-entry";
 
 const MAX_SECONDS = 30 * 60;
@@ -384,22 +383,20 @@ function Processing({
   return (
     <>
       <div className="flex-1 space-y-6 overflow-y-auto">
-        <section className="space-y-2">
-          <h3 className="text-sm font-medium text-muted">Das Wichtigste in Kürze</h3>
-          {entry ? (
-            <Summary entry={{ ...entry, summary: entry.summaryReady ? entry.summary : null }} />
-          ) : (
-            <p className="flex items-center gap-2 text-sm text-muted" role="status">
-              <Spinner /> Aufnahme wird transkribiert …
-            </p>
-          )}
-        </section>
-
-        {recording?.transcript && (
+        {recording?.status === "done" ? (
           <section className="space-y-2">
             <h3 className="text-sm font-medium text-muted">Dein Text</h3>
             <p className="whitespace-pre-wrap leading-relaxed">{recording.transcript}</p>
           </section>
+        ) : recording?.status === "failed" ? (
+          <p className="text-sm text-muted">
+            Die Aufnahme ist gespeichert, die Transkription hat aber noch nicht geklappt. Wir
+            versuchen es automatisch erneut.
+          </p>
+        ) : (
+          <p className="flex items-center gap-2 text-sm text-muted" role="status">
+            <Spinner /> Aufnahme wird transkribiert …
+          </p>
         )}
       </div>
       <Button variant={entry?.pending === false ? "primary" : "secondary"} onClick={onClose} className="w-full">

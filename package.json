@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "cortecs:check": "node --env-file-if-exists=.env scripts/cortecs-check.mjs",
+    "admin:create": "node --env-file-if-exists=.env --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/create-admin.ts",
     "dev:services": "docker compose up -d"
   },
   "dependencies": {

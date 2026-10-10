@@ -1,27 +1,63 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
-import { register } from "@/lib/auth/actions";
+import { register, suggestName, type FormState } from "@/lib/auth/actions";
 
-export function RegisterForm({ teams }: { teams: { id: string; name: string }[] }) {
-  const [state, action, pending] = useActionState(register, undefined);
+export function RegisterForm({
+  proposedName,
+  teams,
+}: {
+  proposedName: string;
+  teams: { id: string; name: string }[];
+}) {
+  const [name, setName] = useState(proposedName);
+  const [suggesting, startSuggesting] = useTransition();
+  const [state, action, pending] = useActionState(async (previous: FormState, formData: FormData) => {
+    const result = await register(previous, formData);
+    // Bei einem vergebenen Namen schickt der Server gleich einen neuen Vorschlag mit
+    if (result?.fields?.username) setName(result.fields.username);
+    return result;
+  }, undefined);
 
   return (
     <form action={action} className="space-y-4">
-      <Field label="E-Mail-Adresse">
-        <input
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          defaultValue={state?.fields?.email}
-          className={inputClass}
-        />
-      </Field>
+      <div className="space-y-1.5">
+        <Field
+          label="Dein Benutzername"
+          hint="Ein zufälliger Fantasiename. Mit ihm meldest du dich an, notiere ihn dir."
+        >
+          <input
+            name="username"
+            value={name}
+            readOnly
+            autoComplete="username"
+            className={`${inputClass} border-transparent bg-accent-soft text-lg font-semibold`}
+          />
+        </Field>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={suggesting}
+          onClick={() => startSuggesting(async () => setName(await suggestName()))}
+        >
+          {suggesting ? "Neuer Name …" : "Anderen Namen vorschlagen"}
+        </Button>
+      </div>
       <Field label="Passwort" hint="Mindestens 8 Zeichen">
         <input
           name="password"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Passwort wiederholen">
+        <input
+          name="passwordRepeat"
           type="password"
           autoComplete="new-password"
           required
@@ -42,9 +78,8 @@ export function RegisterForm({ teams }: { teams: { id: string; name: string }[] 
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="consent" required className="mt-0.5 size-5 accent-accent" />
         <span>
-          Ich bin einverstanden, dass meine Aufnahmen gespeichert, von einer KI in der EU
-          transkribiert und zusammengefasst werden und dass die wissenschaftliche Begleitung sie
-          anhören und lesen sowie meine E-Mail-Adresse einsehen kann.
+          Ich bin einverstanden, dass meine Aufnahmen gespeichert und von einer KI in der EU
+          transkribiert werden und dass die wissenschaftliche Begleitung sie anhören und lesen kann.
         </span>
       </label>
       <ErrorMessage>{state?.error}</ErrorMessage>

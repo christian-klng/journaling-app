@@ -5,12 +5,13 @@ import { after } from "next/server";
 import { and, eq, ne } from "drizzle-orm";
 import * as z from "zod";
 import { assertAdmin } from "@/lib/auth/guards";
+import { createAdminAccount } from "@/lib/auth/accounts";
 import { generateTempPassword, hashPassword, TEMP_PASSWORD_TTL_MS } from "@/lib/auth/password";
 import { destroyAllSessions } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { entries, recordings, teams, users } from "@/lib/db/schema";
+import { recordings, teams, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
-import { processRecording, summarizeEntry } from "@/lib/pipeline";
+import { processRecording } from "@/lib/pipeline";
 import { setSetting, TRANSCRIPTION_PROMPT_KEY, TRANSCRIPTION_PROMPT_MAX_LENGTH } from "@/lib/settings";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
@@ -74,15 +75,23 @@ export async function assignTeam(userId: string, formData: FormData) {
   revalidatePath("/admin", "layout");
 }
 
-export async function setRole(userId: string, role: "user" | "admin") {
+/**
+ * Admin-Konten sind von Anfang an getrennt von denen der Teilnehmenden. Name und
+ * Einmal-Passwort werden nur hier einmal zurückgegeben.
+ */
+export async function createAdmin(): Promise<{ displayName: string; tempPassword: string }> {
+  await assertAdmin();
+  const { displayName, tempPassword } = await createAdminAccount();
+  revalidatePath("/admin", "layout");
+  return { displayName, tempPassword };
+}
+
+export async function deleteAdmin(userId: string) {
   const admin = await assertAdmin();
   // Sonst könnte sich der letzte Admin selbst aussperren
   if (userId === admin.id) return;
 
-  await db
-    .update(users)
-    .set({ role, ...(role === "admin" ? { teamId: null } : {}) })
-    .where(eq(users.id, userId));
+  await db.delete(users).where(and(eq(users.id, userId), eq(users.role, "admin")));
   revalidatePath("/admin", "layout");
 }
 
@@ -110,21 +119,6 @@ export async function resetPassword(userId: string): Promise<{ tempPassword: str
   return { tempPassword };
 }
 
-export type LookupState = { error?: string; found?: { id: string; displayName: string } } | undefined;
-
-/** Findet ein Konto über die exakte E-Mail-Adresse, ohne die Adresse selbst anzuzeigen. */
-export async function findByEmail(_state: LookupState, formData: FormData): Promise<LookupState> {
-  await assertAdmin();
-  const parsed = z.email().trim().toLowerCase().safeParse(formData.get("email"));
-  if (!parsed.success) return { error: "Bitte gib eine vollständige E-Mail-Adresse ein." };
-
-  const [found] = await db
-    .select({ id: users.id, displayName: users.displayName })
-    .from(users)
-    .where(eq(users.email, parsed.data));
-  return found ? { found } : { error: "Zu dieser Adresse gibt es kein Konto." };
-}
-
 export async function saveTranscriptionPrompt(
   _state: ActionState,
   formData: FormData,
@@ -142,7 +136,7 @@ export async function saveTranscriptionPrompt(
   return { ok: true };
 }
 
-/** Stößt die Verarbeitung eines Eintrags neu an, wenn Transkription oder Zusammenfassung hängen. */
+/** Stößt die Transkription eines Eintrags neu an, wenn sie hängt. */
 export async function retryEntry(entryId: string) {
   await assertAdmin();
 
@@ -151,14 +145,9 @@ export async function retryEntry(entryId: string) {
     .set({ attempts: 0, status: "uploaded", error: null, updatedAt: new Date() })
     .where(and(eq(recordings.entryId, entryId), ne(recordings.status, "done")))
     .returning({ id: recordings.id });
-  await db
-    .update(entries)
-    .set({ summaryAttempts: 0, summaryStatus: "pending", summaryError: null, updatedAt: new Date() })
-    .where(eq(entries.id, entryId));
 
   after(async () => {
     for (const { id } of open) await processRecording(id);
-    if (open.length === 0) await summarizeEntry(entryId);
   });
   revalidatePath("/admin", "layout");
 }

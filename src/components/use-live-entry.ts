@@ -5,7 +5,7 @@ import type { EntryDto } from "@/lib/entries";
 
 const POLL_MS = 2000;
 
-/** Fragt den Eintrag so lange nach, bis Transkript und Zusammenfassung fertig sind. */
+/** Fragt den Eintrag so lange nach, bis alle Transkripte fertig sind. */
 export function useLiveEntry(entryId: string, initial?: EntryDto) {
   const [entry, setEntry] = useState<EntryDto | null>(initial ?? null);
   const pending = entry?.pending ?? true;

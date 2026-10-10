@@ -1,4 +1,4 @@
-// Prüft mit dem echten API-Key, ob Transkription und Zusammenfassung über Cortecs funktionieren.
+// Prüft mit dem echten API-Key, ob die Transkription über Cortecs funktioniert.
 // Aufruf: npm run cortecs:check -- pfad/zur/aufnahme.mp3
 import { createReadStream, existsSync } from "node:fs";
 import OpenAI from "openai";
@@ -19,10 +19,9 @@ const client = new OpenAI({
 });
 const routing = { eu_native: process.env.CORTECS_EU_NATIVE !== "false", enable_model_fallback: true };
 const transcriptionModel = process.env.CORTECS_TRANSCRIPTION_MODEL ?? "whisper-large-v3";
-const llmModel = process.env.CORTECS_LLM_MODEL ?? "mistral-small-2603";
 
 console.log(`Transkription mit ${transcriptionModel} …`);
-let started = Date.now();
+const started = Date.now();
 const transcription = await client.audio.transcriptions.create({
   file: createReadStream(file),
   model: transcriptionModel,
@@ -31,23 +30,4 @@ const transcription = await client.audio.transcriptions.create({
 });
 console.log(`  fertig nach ${((Date.now() - started) / 1000).toFixed(1)} s`);
 console.log(`  Anbieter: ${transcription.provider ?? "unbekannt"}`);
-console.log(`  Text: ${transcription.text}\n`);
-
-console.log(`Zusammenfassung mit ${llmModel} …`);
-started = Date.now();
-const completion = await client.chat.completions.create({
-  model: llmModel,
-  temperature: 0.2,
-  max_tokens: 400,
-  messages: [
-    {
-      role: "system",
-      content:
-        'Fasse den Text in genau drei kurzen Stichpunkten zusammen. Antworte nur mit JSON: {"stichpunkte": ["...", "...", "..."]}',
-    },
-    { role: "user", content: transcription.text },
-  ],
-  ...routing,
-});
-console.log(`  fertig nach ${((Date.now() - started) / 1000).toFixed(1)} s`);
-console.log(`  Antwort: ${completion.choices[0]?.message?.content}`);
+console.log(`  Text: ${transcription.text}`);

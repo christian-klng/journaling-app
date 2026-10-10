@@ -37,7 +37,6 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       CORTECS_MOCK: "true",
-      ADMIN_EMAILS: process.env.E2E_ADMIN_EMAIL ?? "admin@example.test",
       // Eigener Build-Ordner, damit ein parallel laufender Dev-Server nicht gestört wird
       NEXT_DIST_DIR: ".next-e2e",
     },

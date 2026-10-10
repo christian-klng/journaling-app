@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { entryFolder, recordingBaseName, safeName, summaryText, toCsv } from "@/lib/export";
+import { entryFolder, recordingBaseName, safeName, toCsv } from "@/lib/export";
 
 describe("Export-Pfade", () => {
   it("baut den Ordner aus Team, Name und Datum", () => {
@@ -35,11 +35,6 @@ describe("Export-Pfade", () => {
 });
 
 describe("Export-Inhalte", () => {
-  it("schreibt die Stichpunkte als Liste", () => {
-    expect(summaryText(["a", "b", "c"])).toBe("- a\n- b\n- c\n");
-    expect(summaryText(null)).toContain("Noch keine Zusammenfassung");
-  });
-
   it("maskiert Anführungszeichen und entschärft Formeln", () => {
     const csv = toCsv(["A", "B"], [['Er sagte "Hallo"', "=SUMME(A1)"]]);
     expect(csv).toBe('﻿"A";"B"\r\n"Er sagte ""Hallo""";"\'=SUMME(A1)"\r\n');

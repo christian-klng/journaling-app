@@ -1,5 +1,5 @@
 {
-  "id": "02ece122-16e0-474e-87e0-c4d7abfb9282",
+  "id": "ab3df69e-68c4-4965-bde3-58221203c5a9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -20,40 +20,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
-        },
-        "summary": {
-          "name": "summary",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "summary_status": {
-          "name": "summary_status",
-          "type": "summary_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "summary_recording_count": {
-          "name": "summary_recording_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "summary_attempts": {
-          "name": "summary_attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "summary_error": {
-          "name": "summary_error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -376,6 +342,38 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.teams": {
       "name": "teams",
       "schema": "",
@@ -428,12 +426,6 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "password_hash": {
           "name": "password_hash",
           "type": "text",
@@ -442,6 +434,12 @@
         },
         "display_name": {
           "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "login_name": {
+          "name": "login_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -521,18 +519,18 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        },
         "users_display_name_unique": {
           "name": "users_display_name_unique",
           "nullsNotDistinct": false,
           "columns": [
             "display_name"
+          ]
+        },
+        "users_login_name_unique": {
+          "name": "users_login_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "login_name"
           ]
         }
       },
@@ -558,15 +556,6 @@
       "values": [
         "user",
         "admin"
-      ]
-    },
-    "public.summary_status": {
-      "name": "summary_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "done",
-        "failed"
       ]
     }
   },

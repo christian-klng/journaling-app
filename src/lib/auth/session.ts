@@ -5,7 +5,6 @@ import { cache } from "react";
 import { and, eq, gt, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sessions, users } from "@/lib/db/schema";
-import { isAdminEmail } from "./admin-emails";
 
 const COOKIE = "session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -39,15 +38,7 @@ export const getSessionUser = cache(async () => {
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(and(eq(sessions.id, hashToken(token)), gt(sessions.expiresAt, new Date())))
     .limit(1);
-  const user = row?.user ?? null;
-
-  // Wird eine Adresse nachträglich in ADMIN_EMAILS eingetragen, greift das auch für
-  // eine bestehende Sitzung, ohne dass sich die Person neu anmelden muss
-  if (user && user.role !== "admin" && isAdminEmail(user.email)) {
-    await db.update(users).set({ role: "admin", teamId: null }).where(eq(users.id, user.id));
-    return { ...user, role: "admin" as const, teamId: null };
-  }
-  return user;
+  return row?.user ?? null;
 });
 
 export async function destroySession() {

@@ -17,9 +17,10 @@ export default async function ChangePasswordPage() {
       {user.mustChangePassword && (
         <Notice>
           Du hast dich mit einem Einmal-Passwort angemeldet. Bitte vergib jetzt ein eigenes Passwort.
+          Dein Benutzername ist <strong>{user.displayName}</strong>.
         </Notice>
       )}
-      <ChangePasswordForm forced={user.mustChangePassword} />
+      <ChangePasswordForm forced={user.mustChangePassword} username={user.displayName} />
       {!user.mustChangePassword && (
         <p className="text-sm">
           <Link

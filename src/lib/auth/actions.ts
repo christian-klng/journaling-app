@@ -1,21 +1,19 @@
 "use server";
 
-import { randomInt } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "@/lib/db";
 import { teams, users } from "@/lib/db/schema";
-import { generateUniqueName } from "@/lib/names";
-import { isAdminEmail } from "./admin-emails";
+import { isGeneratedName, normalizeLoginName } from "@/lib/names";
+import { isNameTaken, proposeName } from "./accounts";
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 import { clearAttempts, recordFailedAttempt, tooManyAttempts } from "./rate-limit";
 import { createSession, destroyAllSessions, destroySession, getSessionUser } from "./session";
 
 export type FormState = { error?: string; fields?: Record<string, string> } | undefined;
 
-const email = z.email("Bitte gib eine gültige E-Mail-Adresse ein.").trim().toLowerCase().max(254);
 const password = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `Das Passwort braucht mindestens ${MIN_PASSWORD_LENGTH} Zeichen.`)
@@ -29,23 +27,29 @@ async function clientIp() {
 const firstError = (error: z.ZodError) => error.issues[0]?.message ?? "Ungültige Eingabe.";
 
 const RegisterSchema = z.object({
-  email,
+  username: z.string(),
   password,
+  passwordRepeat: z.string(),
   teamId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
 });
 
 export async function register(_state: FormState, formData: FormData): Promise<FormState> {
   const fields = {
-    email: String(formData.get("email") ?? ""),
+    username: String(formData.get("username") ?? ""),
     teamId: String(formData.get("teamId") ?? ""),
   };
   const parsed = RegisterSchema.safeParse({
     ...fields,
     password: formData.get("password"),
+    passwordRepeat: formData.get("passwordRepeat"),
     consent: formData.get("consent"),
   });
   if (!parsed.success) return { error: firstError(parsed.error), fields };
+  const data = parsed.data;
+  if (data.password !== data.passwordRepeat) {
+    return { error: "Die beiden Passwörter stimmen nicht überein.", fields };
+  }
 
   const ipKey = `register:${await clientIp()}`;
   if (await tooManyAttempts(ipKey, 10)) {
@@ -53,9 +57,15 @@ export async function register(_state: FormState, formData: FormData): Promise<F
   }
   await recordFailedAttempt([ipKey]);
 
-  const data = parsed.data;
-  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email));
-  if (existing) return { error: "Für diese E-Mail-Adresse gibt es bereits ein Konto.", fields };
+  // Nur vorgeschlagene Fantasienamen, damit niemand seinen echten Namen einträgt
+  if (!isGeneratedName(data.username)) {
+    return { error: "Bitte nimm den vorgeschlagenen Namen.", fields: { ...fields, username: await proposeName() } };
+  }
+  const taken = {
+    error: "Dieser Name wurde gerade an jemand anderen vergeben. Hier ist ein neuer Vorschlag.",
+    fields: { ...fields, username: await proposeName() },
+  };
+  if (await isNameTaken(data.username)) return taken;
 
   let teamId: string | null = null;
   if (data.teamId) {
@@ -64,53 +74,50 @@ export async function register(_state: FormState, formData: FormData): Promise<F
     teamId = team.id;
   }
 
-  const displayName = await generateUniqueName(
-    async (name) =>
-      (await db.select({ id: users.id }).from(users).where(eq(users.displayName, name))).length > 0,
-    randomInt,
-  );
-
-  const admin = isAdminEmail(data.email);
   const [user] = await db
     .insert(users)
     .values({
-      email: data.email,
+      displayName: data.username,
+      loginName: normalizeLoginName(data.username),
       passwordHash: await hashPassword(data.password),
-      displayName,
-      role: admin ? "admin" : "user",
-      teamId: admin ? null : teamId,
+      role: "user",
+      teamId,
       consentAt: new Date(),
     })
     .onConflictDoNothing()
     .returning({ id: users.id });
-  if (!user) return { error: "Das hat nicht geklappt. Bitte versuche es noch einmal.", fields };
+  if (!user) return taken;
 
   await createSession(user.id);
-  redirect(admin ? "/admin" : "/?willkommen=1");
+  redirect("/?willkommen=1");
 }
 
-const LoginSchema = z.object({ email, password: z.string().min(1).max(200) });
+const LoginSchema = z.object({
+  username: z.string().trim().min(1).max(100),
+  password: z.string().min(1).max(200),
+});
 
 // Gleicht die Antwortzeit an, wenn es das Konto nicht gibt
 const DUMMY_HASH =
   "$argon2id$v=19$m=19456,t=2,p=1$VcA0lPgF1TdbADI20knYjg$QwRf5tWUuVv2Z0DNC9IwB6X0vYPr7qOgAkliJtKQRGA";
 
 export async function login(_state: FormState, formData: FormData): Promise<FormState> {
-  const fields = { email: String(formData.get("email") ?? "") };
+  const fields = { username: String(formData.get("username") ?? "") };
   const parsed = LoginSchema.safeParse({ ...fields, password: formData.get("password") });
-  const invalid = { error: "E-Mail-Adresse oder Passwort stimmen nicht.", fields };
+  const invalid = { error: "Benutzername oder Passwort stimmen nicht.", fields };
   if (!parsed.success) return invalid;
 
-  const emailKey = `login:${parsed.data.email}`;
+  const loginName = normalizeLoginName(parsed.data.username);
+  const nameKey = `login:${loginName}`;
   const ipKey = `login-ip:${await clientIp()}`;
-  if ((await tooManyAttempts(emailKey, 8)) || (await tooManyAttempts(ipKey, 40))) {
+  if ((await tooManyAttempts(nameKey, 8)) || (await tooManyAttempts(ipKey, 40))) {
     return { error: "Zu viele Versuche. Bitte warte 15 Minuten.", fields };
   }
 
-  const [user] = await db.select().from(users).where(eq(users.email, parsed.data.email));
+  const [user] = await db.select().from(users).where(eq(users.loginName, loginName));
   const ok = await verifyPassword(user?.passwordHash ?? DUMMY_HASH, parsed.data.password);
   if (!user || !ok) {
-    await recordFailedAttempt([emailKey, ipKey]);
+    await recordFailedAttempt([nameKey, ipKey]);
     return invalid;
   }
 
@@ -121,16 +128,15 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
     };
   }
 
-  await clearAttempts(emailKey);
-  let role = user.role;
-  if (role !== "admin" && isAdminEmail(user.email)) {
-    role = "admin";
-    await db.update(users).set({ role }).where(eq(users.id, user.id));
-  }
-
+  await clearAttempts(nameKey);
   await createSession(user.id);
   if (user.mustChangePassword) redirect("/passwort-aendern");
-  redirect(role === "admin" ? "/admin" : "/");
+  redirect(user.role === "admin" ? "/admin" : "/");
+}
+
+/** Neuer Vorschlag für die Registrierung, wenn der Name nicht gefällt. */
+export async function suggestName() {
+  return proposeName();
 }
 
 export async function logout() {

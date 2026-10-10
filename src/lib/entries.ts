@@ -17,29 +17,16 @@ export type RecordingDto = {
 export type EntryDto = {
   id: string;
   createdAt: string;
-  summary: string[] | null;
-  /** Die Zusammenfassung deckt alle fertig transkribierten Aufnahmen ab */
-  summaryReady: boolean;
-  summaryFailed: boolean;
-  /** Es läuft noch Verarbeitung, die Ansicht soll weiter nachfragen */
+  /** Es wird noch transkribiert, die Ansicht soll weiter nachfragen */
   pending: boolean;
   recordings: RecordingDto[];
 };
 
 export function toEntryDto(entry: EntryWithRecordings): EntryDto {
-  const doneCount = entry.recordings.filter((r) => r.status === "done").length;
-  const working = entry.recordings.some((r) => r.status === "uploaded" || r.status === "transcribing");
-  const summaryReady =
-    entry.summaryStatus === "done" && doneCount > 0 && entry.summaryRecordingCount >= doneCount;
-  const summaryFailed = entry.summaryStatus === "failed" && !working;
-
   return {
     id: entry.id,
     createdAt: entry.createdAt.toISOString(),
-    summary: entry.summary,
-    summaryReady,
-    summaryFailed,
-    pending: working || (doneCount > 0 && !summaryReady && !summaryFailed),
+    pending: entry.recordings.some((r) => r.status === "uploaded" || r.status === "transcribing"),
     recordings: entry.recordings.map((r) => ({
       id: r.id,
       position: r.position,

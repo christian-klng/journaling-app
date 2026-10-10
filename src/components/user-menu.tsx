@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/lib/auth/actions";
 
-export function UserMenu({ displayName, email }: { displayName: string; email: string }) {
+export function UserMenu({ displayName }: { displayName: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -51,9 +51,6 @@ export function UserMenu({ displayName, email }: { displayName: string; email: s
           <p className="border-b border-border px-3 pb-2 pt-1 text-sm">
             <span className="block text-muted">Angemeldet als</span>
             <span className="font-medium">{displayName}</span>
-            <span className="block truncate text-muted" title={email}>
-              {email}
-            </span>
           </p>
           <Link
             role="menuitem"

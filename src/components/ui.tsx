@@ -76,3 +76,12 @@ export function ErrorMessage({ children }: { children: ReactNode }) {
 export function Notice({ children }: { children: ReactNode }) {
   return <p className="rounded-xl bg-accent-soft px-3 py-2 text-sm">{children}</p>;
 }
+
+export function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`inline-block size-4 animate-spin rounded-full border-2 border-accent border-t-transparent ${className}`}
+    />
+  );
+}

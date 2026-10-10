@@ -49,3 +49,33 @@ export async function generateUniqueName(
 }
 
 export const NAME_COMBINATIONS = ADJECTIVES.length * ANIMALS.length;
+
+const BASE_NAMES = new Set(
+  ADJECTIVES.flatMap((adjective) =>
+    ANIMALS.map(([animal, gender]) => `${adjective}${ENDINGS[gender]} ${animal}`),
+  ),
+);
+
+/**
+ * Prüft, ob ein Name aus dem Generator stammen kann. Die Registrierung schlägt den Namen
+ * vorab vor; so kann niemand stattdessen seinen echten Namen einschmuggeln.
+ */
+export function isGeneratedName(name: string) {
+  const match = /^(\S+ \S+)(?: (\d+))?$/.exec(name);
+  if (!match || !BASE_NAMES.has(match[1])) return false;
+  if (match[2] === undefined) return true;
+  const number = Number(match[2]);
+  return String(number) === match[2] && number >= 10 && number < 1000;
+}
+
+const UMLAUTS: Record<string, string> = { ä: "ae", ö: "oe", ü: "ue", ß: "ss" };
+
+/** Schlüssel für die Anmeldung: "fröhliche  Möwe" und "Froehliche Moewe" ergeben dasselbe. */
+export function normalizeLoginName(name: string) {
+  return name
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/[äöüß]/g, (char) => UMLAUTS[char])
+    .replace(/[\s-]+/g, " ")
+    .trim();
+}

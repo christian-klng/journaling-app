@@ -3,13 +3,10 @@ import { UserMenu } from "./user-menu";
 
 export function AppHeader({
   displayName,
-  email,
   home,
   nav = [],
 }: {
   displayName: string;
-  /** Nur die eigene Adresse der angemeldeten Person, nie die einer anderen */
-  email: string;
   home: "/" | "/admin";
   nav?: { href: string; label: string }[];
 }) {
@@ -26,7 +23,7 @@ export function AppHeader({
             </Link>
           ))}
         </nav>
-        <UserMenu displayName={displayName} email={email} />
+        <UserMenu displayName={displayName} />
       </div>
     </header>
   );

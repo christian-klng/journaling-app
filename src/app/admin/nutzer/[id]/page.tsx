@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AutoSubmitSelect } from "@/components/admin/auto-submit-select";
-import { ConfirmForm } from "@/components/admin/confirm-form";
 import { ExportLink } from "@/components/admin/export-link";
 import { ResetPassword } from "@/components/admin/reset-password";
 import { EntryView } from "@/components/entry-view";
 import { Button, Card } from "@/components/ui";
-import { assignTeam, retryEntry, setRole } from "@/lib/admin/actions";
+import { assignTeam, retryEntry } from "@/lib/admin/actions";
 import { getMember, listEntriesForAdmin, listTeams } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 import { isUuid, toEntryDto } from "@/lib/entries";
@@ -31,8 +30,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
         </Link>
         <h1 className="text-xl font-semibold">{member.displayName}</h1>
         <p className="text-sm text-muted">
-          <span className="select-all">{member.email}</span>
-          {" · "}Dabei seit {formatShortDate(member.createdAt)}
+          Dabei seit {formatShortDate(member.createdAt)}
           {member.role === "admin" && " · Admin"}
         </p>
       </div>
@@ -52,21 +50,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
             />
           </form>
         )}
-        {member.id !== me.id && (
-          <div className="flex flex-wrap gap-2">
-            <ResetPassword userId={member.id} displayName={member.displayName} />
-            {member.role === "user" && (
-              <ConfirmForm
-                action={setRole.bind(null, member.id, "admin")}
-                message={`${member.displayName} zum Admin machen? Admins sehen alle Einträge aller Personen.`}
-              >
-                <Button type="submit" variant="ghost" size="sm">
-                  Zum Admin machen
-                </Button>
-              </ConfirmForm>
-            )}
-          </div>
-        )}
+        {member.id !== me.id && <ResetPassword userId={member.id} displayName={member.displayName} />}
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -80,8 +64,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
 
       {entries.map((entry, index) => {
         const dto = toEntryDto(entry);
-        const stuck =
-          !dto.pending && (dto.summaryFailed || entry.recordings.some((r) => r.status === "failed"));
+        const stuck = !dto.pending && entry.recordings.some((r) => r.status === "failed");
         return (
           <details key={entry.id} open={index === 0} className="group space-y-4">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 border-b border-border [&::-webkit-details-marker]:hidden">

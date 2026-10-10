@@ -9,13 +9,15 @@ export function LoginForm() {
 
   return (
     <form action={action} className="space-y-4">
-      <Field label="E-Mail-Adresse">
+      <Field label="Benutzername">
         <input
-          name="email"
-          type="email"
-          autoComplete="email"
+          name="username"
+          autoComplete="username"
+          autoCapitalize="words"
+          spellCheck={false}
           required
-          defaultValue={state?.fields?.email}
+          placeholder="z. B. Mutiger Otter"
+          defaultValue={state?.fields?.username}
           className={inputClass}
         />
       </Field>

@@ -2,21 +2,15 @@
 
 import type { EntryDto } from "@/lib/entries";
 import { formatDuration, formatTime } from "@/lib/format";
-import { Spinner, Summary } from "./summary";
-import { Card } from "./ui";
+import { Card, Spinner } from "./ui";
 import { useLiveEntry } from "./use-live-entry";
 
-/** Zusammenfassung und Aufnahmen eines Eintrags, aktualisiert sich während der Verarbeitung. */
+/** Aufnahmen und Transkripte eines Eintrags, aktualisiert sich während der Transkription. */
 export function EntryView({ initial }: { initial: EntryDto }) {
   const entry = useLiveEntry(initial.id, initial) ?? initial;
 
   return (
     <div className="space-y-6">
-      <Card className="space-y-3">
-        <h2 className="text-sm font-medium text-muted">Das Wichtigste in Kürze</h2>
-        <Summary entry={entry} />
-      </Card>
-
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted">
           {entry.recordings.length === 1 ? "Aufnahme" : `${entry.recordings.length} Aufnahmen`}

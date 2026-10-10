@@ -21,6 +21,8 @@ COPY --from=build --chown=node:node /app/.next ./.next
 COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/drizzle ./drizzle
 COPY --from=build --chown=node:node /app/scripts ./scripts
+# Für scripts/create-admin.ts, das Namen und Passwort-Hash aus dem App-Code nutzt
+COPY --from=build --chown=node:node /app/src/lib ./src/lib
 USER node
 EXPOSE 3000
 CMD ["sh", "-c", "exec node_modules/.bin/next start --hostname 0.0.0.0 --port ${PORT:-3000}"]

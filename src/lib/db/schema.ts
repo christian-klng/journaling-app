@@ -3,7 +3,6 @@ import {
   boolean,
   index,
   integer,
-  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -13,7 +12,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["user", "admin"]);
-export const summaryStatusEnum = pgEnum("summary_status", ["pending", "done", "failed"]);
 export const recordingStatusEnum = pgEnum("recording_status", [
   "uploaded",
   "transcribing",
@@ -31,10 +29,11 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    // Nur für den Login. Wird Admins nie angezeigt und nie exportiert.
-    email: text("email").notNull().unique(),
     passwordHash: text("password_hash").notNull(),
+    // Der Fantasiename ist zugleich der Benutzername. Eine E-Mail-Adresse speichern wir nicht.
     displayName: text("display_name").notNull().unique(),
+    // Fantasiename in Kleinbuchstaben und ohne Umlaute, damit die Anmeldung Tippvarianten verzeiht
+    loginName: text("login_name").notNull().unique(),
     role: roleEnum("role").notNull().default("user"),
     teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
     mustChangePassword: boolean("must_change_password").notNull().default(false),
@@ -76,12 +75,6 @@ export const entries = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    summary: jsonb("summary").$type<string[]>(),
-    summaryStatus: summaryStatusEnum("summary_status").notNull().default("pending"),
-    // Anzahl der Aufnahmen, die in der gespeicherten Zusammenfassung berücksichtigt sind
-    summaryRecordingCount: integer("summary_recording_count").notNull().default(0),
-    summaryAttempts: integer("summary_attempts").notNull().default(0),
-    summaryError: text("summary_error"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

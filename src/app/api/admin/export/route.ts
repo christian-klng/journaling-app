@@ -4,7 +4,7 @@ import { ZipArchive } from "archiver";
 import { assertAdmin, errorResponse, HttpError } from "@/lib/auth/guards";
 import { getExportData, type ExportScope } from "@/lib/admin/queries";
 import { isUuid } from "@/lib/entries";
-import { entryFolder, recordingBaseName, summaryText, toCsv } from "@/lib/export";
+import { entryFolder, recordingBaseName, toCsv } from "@/lib/export";
 import { formatIsoDate, formatShortDate, formatTime } from "@/lib/format";
 import { getObjectStream } from "@/lib/storage";
 
@@ -49,8 +49,6 @@ export async function GET(request: Request) {
         entryNumbers.set(row.userId, entryNumber);
         const folder = entryFolder({ ...row, entryNumber, createdAt: row.entry.createdAt });
 
-        await add(summaryText(row.entry.summary), `${folder}/zusammenfassung.txt`);
-
         for (const recording of row.recordings) {
           const base = `${folder}/${recordingBaseName(recording.position)}`;
           const key = recording.storageKeyMp3 ?? recording.storageKeyOriginal;
@@ -75,9 +73,6 @@ export async function GET(request: Request) {
           formatTime(row.entry.createdAt),
           row.recordings.length,
           row.recordings.reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0),
-          row.entry.summary?.[0] ?? "",
-          row.entry.summary?.[1] ?? "",
-          row.entry.summary?.[2] ?? "",
           folder,
         ]);
       }
@@ -86,7 +81,7 @@ export async function GET(request: Request) {
         toCsv(
           [
             "Team", "Fantasiename", "Eintrag", "Datum", "Uhrzeit", "Aufnahmen",
-            "Dauer (Sekunden)", "Stichpunkt 1", "Stichpunkt 2", "Stichpunkt 3", "Ordner",
+            "Dauer (Sekunden)", "Ordner",
           ],
           csvRows,
         ),

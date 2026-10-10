@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { PendingUploads } from "@/components/pending-uploads";
 import { RecordingModal } from "@/components/recording-modal";
-import { Summary } from "@/components/summary";
-import { Card, Notice } from "@/components/ui";
+import { Card, Notice, Spinner } from "@/components/ui";
 import { requireUser } from "@/lib/auth/guards";
-import { listEntries, toEntryDto } from "@/lib/entries";
+import { listEntries, toEntryDto, type EntryDto } from "@/lib/entries";
 import { formatDate, formatDuration } from "@/lib/format";
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
@@ -16,9 +15,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     <div className="space-y-6">
       {params.willkommen && (
         <Notice>
-          Willkommen! Dein Name hier ist <strong>{user.displayName}</strong>. Unter diesem Namen
-          sieht die wissenschaftliche Begleitung deine Einträge. Angemeldet bist du als{" "}
-          {user.email}.
+          Willkommen! Dein Benutzername ist <strong>{user.displayName}</strong>. Mit ihm meldest du
+          dich an, notiere ihn dir. Unter diesem Namen sieht die wissenschaftliche Begleitung deine
+          Einträge.
         </Notice>
       )}
       {params.passwort && <Notice>Dein Passwort wurde geändert.</Notice>}
@@ -46,12 +45,30 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                     {formatDuration(seconds)}
                   </p>
                 </div>
-                <Summary entry={entry} />
+                <EntryPreview entry={entry} />
               </Card>
             </Link>
           );
         })}
       </section>
     </div>
+  );
+}
+
+function EntryPreview({ entry }: { entry: EntryDto }) {
+  const transcript = entry.recordings.find((r) => r.status === "done")?.transcript;
+  if (transcript) return <p className="line-clamp-3 text-muted">{transcript}</p>;
+  if (entry.pending) {
+    return (
+      <p className="flex items-center gap-2 text-sm text-muted" role="status">
+        <Spinner /> Aufnahme wird transkribiert …
+      </p>
+    );
+  }
+  return (
+    <p className="text-sm text-muted">
+      Die Aufnahme ist gespeichert, die Transkription hat noch nicht geklappt. Wir versuchen es
+      automatisch erneut.
+    </p>
   );
 }

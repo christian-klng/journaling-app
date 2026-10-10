@@ -1,14 +1,8 @@
 CREATE TYPE "public"."recording_status" AS ENUM('uploaded', 'transcribing', 'done', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('user', 'admin');--> statement-breakpoint
-CREATE TYPE "public"."summary_status" AS ENUM('pending', 'done', 'failed');--> statement-breakpoint
 CREATE TABLE "entries" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
-	"summary" jsonb,
-	"summary_status" "summary_status" DEFAULT 'pending' NOT NULL,
-	"summary_recording_count" integer DEFAULT 0 NOT NULL,
-	"summary_attempts" integer DEFAULT 0 NOT NULL,
-	"summary_error" text,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -43,6 +37,12 @@ CREATE TABLE "sessions" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "settings" (
+	"key" text PRIMARY KEY NOT NULL,
+	"value" text NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "teams" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -52,17 +52,17 @@ CREATE TABLE "teams" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"email" text NOT NULL,
 	"password_hash" text NOT NULL,
 	"display_name" text NOT NULL,
+	"login_name" text NOT NULL,
 	"role" "role" DEFAULT 'user' NOT NULL,
 	"team_id" uuid,
 	"must_change_password" boolean DEFAULT false NOT NULL,
 	"temp_password_expires_at" timestamp with time zone,
 	"consent_at" timestamp with time zone NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email"),
-	CONSTRAINT "users_display_name_unique" UNIQUE("display_name")
+	CONSTRAINT "users_display_name_unique" UNIQUE("display_name"),
+	CONSTRAINT "users_login_name_unique" UNIQUE("login_name")
 );
 --> statement-breakpoint
 ALTER TABLE "entries" ADD CONSTRAINT "entries_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

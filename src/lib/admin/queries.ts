@@ -3,7 +3,6 @@ import { asc, count, desc, eq, max, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { entries, recordings, teams, users } from "@/lib/db/schema";
 
-// Die E-Mail-Adresse erscheint nur auf der Personenseite (getMember), sonst nirgends.
 const memberColumns = {
   id: users.id,
   displayName: users.displayName,
@@ -62,7 +61,7 @@ export function listAdmins() {
 
 export async function getMember(userId: string) {
   const [member] = await db
-    .select({ ...memberColumns, email: users.email })
+    .select(memberColumns)
     .from(users)
     .where(eq(users.id, userId));
   return member ?? null;

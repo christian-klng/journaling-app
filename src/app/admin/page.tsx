@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EmailLookup } from "@/components/admin/email-lookup";
 import { ExportLink } from "@/components/admin/export-link";
 import { Card } from "@/components/ui";
 import { getOverview, type Member } from "@/lib/admin/queries";
@@ -35,16 +34,6 @@ export default async function AdminHome() {
       {(overview.withoutTeam.length > 0 || overview.teams.length > 0) && (
         <TeamCard name="Ohne Team" members={overview.withoutTeam} exportQuery="?team=none" muted />
       )}
-
-      <Card className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="font-semibold">Konto über die E-Mail-Adresse finden</h2>
-          <p className="text-sm text-muted">
-            Für den Fall, dass jemand sein Passwort und seinen Fantasienamen vergessen hat.
-          </p>
-        </div>
-        <EmailLookup />
-      </Card>
     </div>
   );
 }

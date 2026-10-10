@@ -3,22 +3,13 @@ import { toEntryDto, type EntryWithRecordings } from "@/lib/entries";
 
 type RecordingStatus = EntryWithRecordings["recordings"][number]["status"];
 
-function entry(
-  statuses: RecordingStatus[],
-  summary: Partial<Pick<EntryWithRecordings, "summaryStatus" | "summaryRecordingCount" | "summary">> = {},
-): EntryWithRecordings {
+function entry(statuses: RecordingStatus[]): EntryWithRecordings {
   const now = new Date("2026-09-22T10:00:00Z");
   return {
     id: "e1",
     userId: "u1",
-    summary: null,
-    summaryStatus: "pending",
-    summaryRecordingCount: 0,
-    summaryAttempts: 0,
-    summaryError: null,
     createdAt: now,
     updatedAt: now,
-    ...summary,
     recordings: statuses.map((status, index) => ({
       id: `r${index}`,
       entryId: "e1",
@@ -39,36 +30,17 @@ function entry(
 }
 
 describe("toEntryDto", () => {
-  it("wartet, solange transkribiert wird", () => {
-    const dto = toEntryDto(entry(["transcribing"]));
-    expect(dto).toMatchObject({ pending: true, summaryReady: false });
+  it("wartet, solange eine Aufnahme hochgeladen oder transkribiert wird", () => {
+    expect(toEntryDto(entry(["uploaded"])).pending).toBe(true);
+    expect(toEntryDto(entry(["done", "transcribing"])).pending).toBe(true);
   });
 
-  it("wartet nach dem Transkript auf die Zusammenfassung", () => {
-    const dto = toEntryDto(entry(["done"]));
-    expect(dto).toMatchObject({ pending: true, summaryReady: false });
+  it("ist fertig, wenn alle Transkripte da sind", () => {
+    expect(toEntryDto(entry(["done", "done"])).pending).toBe(false);
   });
 
-  it("ist fertig, wenn die Zusammenfassung alle Aufnahmen abdeckt", () => {
-    const dto = toEntryDto(
-      entry(["done", "done"], { summaryStatus: "done", summaryRecordingCount: 2, summary: ["a", "b", "c"] }),
-    );
-    expect(dto).toMatchObject({ pending: false, summaryReady: true });
-  });
-
-  it("gilt als veraltet, wenn eine weitere Aufnahme dazugekommen ist", () => {
-    const dto = toEntryDto(
-      entry(["done", "done"], { summaryStatus: "done", summaryRecordingCount: 1, summary: ["a", "b", "c"] }),
-    );
-    expect(dto).toMatchObject({ pending: true, summaryReady: false });
-  });
-
-  it("hört auf zu warten, wenn alles fehlgeschlagen ist", () => {
-    expect(toEntryDto(entry(["failed"])).pending).toBe(false);
-    expect(toEntryDto(entry(["done"], { summaryStatus: "failed" }))).toMatchObject({
-      pending: false,
-      summaryFailed: true,
-    });
+  it("hört auf zu warten, wenn die Transkription fehlgeschlagen ist", () => {
+    expect(toEntryDto(entry(["done", "failed"])).pending).toBe(false);
   });
 
   it("gibt keine Speicherpfade oder Fehlertexte heraus", () => {
