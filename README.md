@@ -39,7 +39,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 |---|---|
 | Framework | Next.js 16 (App Router), TypeScript, Tailwind CSS 4 |
 | Datenbank | Postgres mit Drizzle ORM |
-| Audio-Speicher | S3-kompatibel (Railway Bucket) |
+| Audio-Speicher | S3-kompatibel (Hetzner Object Storage) |
+| Betrieb | Docker-Container über Coolify auf einem Server bei Hetzner |
 | Anmeldung | Eigene Sessions in der Datenbank, Passwörter mit Argon2id |
 | Transkription | Whisper über Cortecs AI (OpenAI-kompatible API), nur EU-Anbieter. Sonst nutzt die App keine KI. |
 | Audio | ffmpeg wandelt jede Aufnahme in MP3 (mono, 64 kbit/s) um |
@@ -95,41 +96,75 @@ und einen Beispieltext statt der Transkription. Den Test-Admin legen sie selbst 
 | `CORTECS_TRANSCRIPTION_LANGUAGE` | Standard `de`, leer für automatische Erkennung |
 | `CORTECS_EU_NATIVE` | Standard `true`, nur Anbieter in der EU |
 
-## Deployment auf Railway
+## Deployment mit Coolify auf Hetzner
 
-Gebaut wird aus dem `Dockerfile`. Railway liest für neue Dienste keine `railway.json` mehr, die
-folgenden Einstellungen stehen deshalb direkt am Dienst (Settings):
+Coolify baut die App aus dem `Dockerfile`. Der Container führt beim Start zuerst die Migrationen
+aus und startet dann den Server. Den Healthcheck (`/api/health`) bringt das `Dockerfile` mit;
+Coolify übernimmt ihn und schaltet bei einem neuen Deployment erst um, wenn der neue Container
+gesund ist.
+
+### 1. Audio-Speicher bei Hetzner
+
+1. In der Hetzner Console unter **Object Storage** einen Bucket anlegen, Standort in der EU
+   (z. B. `fsn1`), Sichtbarkeit **privat**.
+2. Unter **Sicherheit → S3-Zugangsdaten** Zugangsdaten erzeugen. Der Secret Key wird nur einmal
+   angezeigt.
+3. Der Endpoint ist `https://<standort>.your-objectstorage.com`, die Region der Standort.
+
+### 2. Datenbank in Coolify
+
+**New Resource → Database → PostgreSQL** im selben Projekt wie die App. Nicht öffentlich
+erreichbar machen. Die **interne** Postgres-URL ist später `DATABASE_URL`. Unter **Backups**
+lassen sich regelmäßige Sicherungen einrichten, z. B. in einen zweiten Bucket bei Hetzner.
+
+### 3. App in Coolify
+
+**New Resource → Application → Private Repository (with GitHub App)**, Repository
+`christian-klng/journaling-app`, Branch `main`. Über die GitHub-App wird bei jedem Push
+automatisch neu deployt.
 
 | Einstellung | Wert |
 |---|---|
-| Pre-Deploy Command | `node scripts/migrate.mjs` |
-| Healthcheck Path | `/api/health` |
-| Healthcheck Timeout | 120 Sekunden |
-| Restart Policy | On Failure, 5 Versuche |
+| Build Pack | Dockerfile |
+| Ports Exposes | `3000` |
+| Domains | mit `https://` eintragen, sonst gibt der Browser das Mikrofon nicht frei |
 
-1. Projekt in der Region **EU West** anlegen.
-2. **Postgres** hinzufügen.
-3. **Bucket** hinzufügen, ebenfalls in der EU. Die Region lässt sich später nicht mehr ändern.
-4. Den Web-Service aus dem Repository anlegen und diese Variablen setzen:
+Umgebungsvariablen:
 
-   ```
-   DATABASE_URL=${{Postgres.DATABASE_URL}}
-   S3_ENDPOINT=${{audio.ENDPOINT}}
-   S3_REGION=${{audio.REGION}}
-   S3_BUCKET=${{audio.BUCKET}}
-   S3_ACCESS_KEY_ID=${{audio.ACCESS_KEY_ID}}
-   S3_SECRET_ACCESS_KEY=${{audio.SECRET_ACCESS_KEY}}
-   CORTECS_API_KEY=…
-   ```
+```
+DATABASE_URL=<interne Postgres-URL aus Coolify>
+S3_ENDPOINT=https://fsn1.your-objectstorage.com
+S3_REGION=fsn1
+S3_BUCKET=<Name des Buckets>
+S3_ACCESS_KEY_ID=…
+S3_SECRET_ACCESS_KEY=…
+CORTECS_API_KEY=…
+```
 
-   `Postgres` und `audio` sind die Namen von Datenbank und Bucket im Projekt.
-5. Eine öffentliche Domain erzeugen.
-6. Im Container `node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/create-admin.ts`
-   ausführen. Das Skript gibt Benutzername und Einmal-Passwort des ersten Admins aus.
-7. Als Admin unter „Teams" die Teams anlegen, die bei der Registrierung zur Auswahl stehen sollen.
+Danach **Deploy**. Die App muss mit **einer** Instanz laufen: Die Verarbeitung der Aufnahmen läuft
+im selben Prozess und nimmt nach einem Neustart liegen gebliebene Aufnahmen selbst wieder auf.
 
-Der Service muss mit **einer** Instanz laufen. Die Verarbeitung der Aufnahmen läuft im selben
-Prozess und nimmt nach einem Neustart liegen gebliebene Aufnahmen selbst wieder auf.
+### 4. Ersten Admin anlegen
+
+Im **Terminal** der App in Coolify:
+
+```bash
+node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/create-admin.ts
+```
+
+Das Skript gibt Benutzername und Einmal-Passwort aus. Nach der ersten Anmeldung vergibt der Admin
+ein eigenes Passwort und legt unter „Teams" die Teams an, die bei der Registrierung zur Auswahl
+stehen.
+
+### Lange Uploads
+
+Traefik, der Proxy von Coolify, bricht sehr langsame Uploads je nach Version nach 60 Sekunden ab.
+Scheitern lange Aufnahmen über mobiles Netz, in Coolify unter **Servers → Proxy** in der
+Konfiguration beim `command` ergänzen und den Proxy neu starten:
+
+```
+- '--entrypoints.https.transport.respondingTimeouts.readTimeout=10m'
+```
 
 ## Datenschutz
 
@@ -137,7 +172,8 @@ Prozess und nimmt nach einem Neustart liegen gebliebene Aufnahmen selbst wieder 
   und von der wissenschaftlichen Begleitung eingesehen werden.
 - Die App speichert weder E-Mail-Adressen noch echte Namen. Konten heißen nach einem zufälligen
   Fantasienamen, den die App vorschlägt; eigene Namen lassen sich nicht eintragen.
-- Audio und Texte liegen in der EU (Railway EU West). Cortecs leitet nur an Anbieter in der EU weiter.
+- Audio und Texte liegen in der EU, auf dem Server und im Object Storage bei Hetzner. Cortecs leitet
+  zur Transkription nur an Anbieter in der EU weiter.
 - Nutzer können Einträge derzeit nicht selbst löschen. Löschwünsche müssen über die Datenbank
   erfüllt werden.
 

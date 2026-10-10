@@ -16,7 +16,7 @@ services:
       timeout: 3s
       retries: 20
 
-  # S3-kompatibler Speicher für lokal (Versity Gateway), ersetzt den Railway Bucket
+  # S3-kompatibler Speicher für lokal (Versity Gateway), ersetzt Hetzner Object Storage
   s3:
     image: versity/versitygw:latest
     entrypoint: ["/bin/sh", "-c", "mkdir -p /data/journal-audio && exec versitygw --port :7070 posix /data"]

@@ -12,6 +12,10 @@ function client() {
     endpoint: process.env.S3_ENDPOINT,
     region: process.env.S3_REGION ?? "auto",
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+    // Neuere SDK-Versionen senden standardmäßig zusätzliche Prüfsummen-Header, die nicht jeder
+    // S3-kompatible Anbieter versteht. Nur senden, wenn eine Operation sie verlangt.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY_ID!,
       secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
