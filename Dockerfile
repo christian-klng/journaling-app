@@ -26,8 +26,9 @@ COPY --from=build --chown=node:node /app/src/lib ./src/lib
 USER node
 EXPOSE 3000
 # Coolify übernimmt diesen Healthcheck und schaltet erst auf den neuen Container um, wenn er gesund
-# ist. Die Wartezeit deckt die Migrationen beim Start ab.
-HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=3 \
+# ist. Coolify wartet die Startphase immer ganz ab, deshalb ist sie kurz. Die Wiederholungen geben
+# der Datenbank nach einem Neustart des Servers trotzdem bis zu 90 Sekunden.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=7 \
   CMD curl -fsS "http://127.0.0.1:${PORT:-3000}/api/health" || exit 1
 # Erst die Migrationen, dann der Server. exec, damit der Server die Signale zum Beenden bekommt.
 CMD ["sh", "-c", "node scripts/migrate.mjs && exec node_modules/.bin/next start --hostname 0.0.0.0 --port ${PORT:-3000}"]

@@ -19,7 +19,8 @@ export function parseDurationSeconds(ffmpegOutput: string): number | null {
  */
 export function convertToMp3(inputPath: string, outputPath: string) {
   return new Promise<{ durationSeconds: number | null }>((resolve, reject) => {
-    const proc = spawn(ffmpegPath(), [
+    // Der Pfad ist erst zur Laufzeit bekannt; ohne den Hinweis bündelt der Build das ganze Projekt
+    const proc = spawn(/*turbopackIgnore: true*/ ffmpegPath(), [
       "-hide_banner", "-y",
       "-i", inputPath,
       "-vn", "-ac", "1", "-ar", "24000", "-b:a", "64k",
