@@ -9,65 +9,81 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 
 ## Funktionen
 
-**Nutzer**
+**Teilnehmende**
 
-- Registrierung mit Passwort und Team-Auswahl. Jeder bekommt einen zufälligen Fantasienamen, der
-  zugleich der Benutzername ist. Die App speichert keine E-Mail-Adressen und keine echten Namen.
+- Registrierung mit Passwort, Team und persönlichem Code. Jede Person bekommt einen zufälligen
+  Fantasienamen, der zugleich der Benutzername ist. Die App speichert keine E-Mail-Adressen und
+  keine echten Namen.
+- Der persönliche Code (z. B. KA-03-BE-A) besteht aus den ersten zwei Buchstaben des Vornamens
+  der Mutter, dem Geburtsmonat, den ersten zwei Buchstaben des Geburtsortes und der Gruppe. Die
+  Gruppe lässt sich bei der Registrierung oder später unter „Code und Gruppe" genau einmal selbst
+  eintragen; solange sie fehlt, blinkt ein roter Punkt.
 - Bei der Anmeldung spielen Groß- und Kleinschreibung keine Rolle, Umlaute dürfen als ae, oe, ue
   geschrieben werden.
-- Bei der Registrierung bildet jede Person ihren persönlichen Code (z. B. KA-03-BE-A): erste zwei
-  Buchstaben des Vornamens der Mutter, Geburtsmonat, erste zwei Buchstaben des Geburtsortes. Der
-  letzte Teil ist die Gruppe. Sie lässt sich bei der Registrierung oder später unter „Code und
-  Gruppe" genau einmal selbst eintragen; solange sie fehlt, blinkt ein roter Punkt.
-- Die Startseite zeigt die Abfragen der eigenen Gruppe, deren Zeitfenster gerade läuft, dazu
-  verpasste Abfragen zum Nachholen und die nächste, die noch kommt. Ohne Gruppe gibt es keine Fragen.
-- Eine Abfrage führt Schritt für Schritt durch ihre Fragen: Smiley-Skala, Skala 0–10 oder Audio-Frage.
-  Pflichtfragen lassen sich nicht überspringen. Jede Antwort wird sofort gespeichert; eine
-  unterbrochene Abfrage geht bei der ersten offenen Frage weiter.
-- Auf eine Audio-Frage antwortet man mit einer oder mehreren Aufnahmen. Sie werden transkribiert.
+- Die Startseite zeigt die Abfragen der eigenen Gruppe, deren Zeitfenster gerade läuft, verpasste
+  Abfragen zum Nachholen und die nächste, die noch kommt. Ohne Gruppe gibt es keine Fragen.
+- Eine Abfrage führt Schritt für Schritt durch ihre Fragen: Smiley-Skala 1–5, Skala 0–10 oder
+  Audio-Frage. Pflichtfragen lassen sich nicht überspringen. Jede Antwort wird sofort gespeichert;
+  eine unterbrochene Abfrage geht bei der ersten offenen Frage weiter.
+- Auf eine Audio-Frage antwortet man mit einer oder mehreren Aufnahmen, die transkribiert werden.
+  Bricht der Upload ab, bleibt die Aufnahme auf dem Gerät gesichert und lässt sich später senden.
 - Erledigte Abfragen lassen sich mit Antworten, Aufnahmen und Transkripten ansehen.
-- Bricht der Upload ab, bleibt die Aufnahme auf dem Gerät gesichert und kann später gesendet werden.
 
-**Admins**
+**Studienleitung (Admins)**
 
-- Startseite mit allen Teams und ihren Mitgliedern, dazu die Gruppe „Ohne Team".
-- Teams anlegen, umbenennen, löschen. Personen einem Team zuordnen.
-- Einträge jeder Person lesen und anhören.
-- Teilnahme-Tabelle (unter „Teilnahme"): pro Person und Woche, ob jede Abfrage erledigt,
-  nachgeholt, begonnen oder verpasst ist.
-- Persönlicher Code und Gruppe in der Übersicht. Doppelte Codes werden angezeigt. Gruppen lassen
-  sich auf der Seite der Person oder gesammelt über eine Liste von Codes zuweisen, Codes korrigieren.
-- Konten von Teilnehmenden löschen, mit allen Einträgen und Audiodateien.
-- ZIP-Export für alles, ein Team oder eine Person: `antworten.csv` mit einer Zeile pro beantworteter
-  Frage (Code, Gruppe, Woche, Abfrage, Fragetext wie gesehen, Wert oder Transkript, nachgeholt ja/nein),
-  `teilnahme.csv` mit dem Stand pro Person, Woche und Abfrage, die Audiodateien mit Transkripten in
-  Ordnern nach Team, Code und Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
-- Hinweistext für die Transkription pflegen (unter „Einstellungen"): Namen, Fachbegriffe und
-  Abkürzungen, die das Modell richtig schreiben soll.
-- Passwort zurücksetzen: Ein Einmal-Passwort wird einmalig angezeigt und gilt 72 Stunden. Die
-  Person muss danach ein eigenes Passwort vergeben.
-- Studie einrichten (unter „Studie"): Studienzeitraum, Gruppen (Buchstabe für den persönlichen Code
-  und interne Bezeichnung) und pro Gruppe Abfragen mit Zeitfenster, Einleitung und Elementen
-  (Smiley-Skala 1–5, Skala 0–10, Audio-Frage), jeweils als Pflicht oder optional. Die Fragen stehen
-  in der Datenbank, nicht im Code, damit das öffentliche Repository sie nicht verrät.
-- Abfragen und Elemente werden nicht gelöscht, sondern archiviert. Textkorrekturen sind jederzeit
-  möglich; gegebene Antworten behalten den Text, den die Person gesehen hat.
-- Vorschau einer Abfrage aus Sicht der Teilnehmenden, Kopieren in eine andere Gruppe und Import
-  bzw. Export der ganzen Konfiguration als JSON.
-- Weitere Admins anlegen (unter „Teams"). Admin-Konten sind von denen der Teilnehmenden getrennt
-  und bekommen ebenfalls einen Fantasienamen und ein Einmal-Passwort.
+- *Studie:* Studienzeitraum, Gruppen (Buchstabe für den Code, interne Bezeichnung) und pro Gruppe
+  Abfragen mit Zeitfenster, Einleitung und Fragen, jeweils Pflicht oder optional. Vorschau aus Sicht
+  der Teilnehmenden, Kopieren in eine andere Gruppe, Import und Export als JSON. Abfragen und
+  Fragen werden archiviert statt gelöscht; Textkorrekturen sind jederzeit möglich, gegebene
+  Antworten behalten den Text, den die Person gesehen hat.
+- *Übersicht:* alle Teams mit ihren Mitgliedern, deren Code und Gruppe. Doppelte Codes werden
+  angezeigt. Gruppen lassen sich einzeln oder gesammelt über eine Liste von Codes zuweisen.
+- *Personenseite:* Einträge lesen und anhören, Team und Gruppe ändern, Code korrigieren, Passwort
+  zurücksetzen (Einmal-Passwort, 72 Stunden gültig), Konto samt Einträgen und Audiodateien löschen.
+- *Teilnahme:* Tabelle pro Person und Woche, ob jede Abfrage erledigt, nachgeholt, begonnen oder
+  verpasst ist.
+- *Export* als ZIP für alles, ein Team oder eine Person: `antworten.csv` mit einer Zeile pro
+  beantworteter Frage, `teilnahme.csv`, Audiodateien mit Transkripten in Ordnern nach Team, Code und
+  Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
+- *Teams* anlegen, umbenennen und löschen; weitere Admins anlegen. Admin-Konten sind von denen der
+  Teilnehmenden getrennt.
+- *Einstellungen:* Hinweistext für die Transkription mit Namen, Fachbegriffen und Abkürzungen, die
+  das Modell richtig schreiben soll.
 
-## Technik
+## Ablauf einer Studie
 
-| Bereich | Wahl |
+1. Unter **Teams** die Teams anlegen, die bei der Registrierung zur Auswahl stehen.
+2. Unter **Studie** die Gruppen und Abfragen anlegen oder eine vorbereitete JSON-Datei importieren.
+   Die Fragen gehören nicht ins Repository; die Importdatei bleibt bei der Studienleitung.
+3. Den **Studienzeitraum** eintragen. Ohne ihn sehen Teilnehmende keine Fragen.
+4. Die Teilnehmenden registrieren sich und bilden dabei ihren persönlichen Code.
+5. Nach der Teambildung die Gruppen mitteilen. Die Teilnehmenden tragen sie selbst ein, oder die
+   Studienleitung weist sie in der Übersicht gesammelt über die Codes zu.
+6. Während der Studie unter **Teilnahme** verfolgen, wer welche Abfrage erledigt hat.
+7. Zum Schluss alles als ZIP exportieren.
+
+## Zeitplan
+
+- Woche 1 ist die Woche (Montag bis Sonntag), in die der Studienstart fällt.
+- Jede Abfrage hat ein Zeitfenster innerhalb der Woche, z. B. Montag bis Mittwoch. Zeitfenster, die
+  ganz vor dem Start oder nach dem Ende liegen, entfallen.
+- Ist das Zeitfenster vorbei, erscheint die Abfrage unter „Nachholen". Nachgeholte Einträge zählen
+  zu ihrer ursprünglichen Woche und sind im Export gekennzeichnet.
+- Alle Tage und Uhrzeiten gelten in deutscher Zeit.
+
+## Wo was im Code steht
+
+| Thema | Dateien |
 |---|---|
-| Framework | Next.js 16 (App Router), TypeScript, Tailwind CSS 4 |
-| Datenbank | Postgres mit Drizzle ORM |
-| Audio-Speicher | S3-kompatibel (Hetzner Object Storage) |
-| Betrieb | Docker-Container über Coolify auf einem Server bei Hetzner |
-| Anmeldung | Eigene Sessions in der Datenbank, Passwörter mit Argon2id |
-| Transkription | Whisper über Cortecs AI (OpenAI-kompatible API), nur EU-Anbieter. Sonst nutzt die App keine KI. |
-| Audio | ffmpeg wandelt jede Aufnahme in MP3 (mono, 64 kbit/s) um |
+| Datenmodell | `src/lib/db/schema.ts`, Migrationen in `drizzle/` |
+| Anmeldung, Sitzungen, Passwörter | `src/lib/auth/` |
+| Persönlicher Code | `src/lib/study/code.ts` |
+| Zeitplan und Teilnahme | `src/lib/study/schedule.ts`, `src/lib/study/participation.ts` |
+| Abfragen ausfüllen | `src/lib/study/entry-actions.ts`, `src/components/study/` |
+| Aufnahme, Upload, Umwandlung, Transkription | `src/components/study/use-recorder.ts`, `src/app/api/recordings/`, `src/lib/pipeline.ts`, `src/lib/cortecs.ts` |
+| Audio-Speicher | `src/lib/storage.ts` |
+| Export | `src/app/api/admin/export/route.ts`, `src/lib/export.ts` |
+| Konto löschen | `deleteParticipant` in `src/lib/admin/actions.ts` |
 
 ## Lokal entwickeln
 
@@ -106,7 +122,19 @@ npm run typecheck
 ```
 
 Die End-to-End-Tests starten einen eigenen Server auf Port 3200, nutzen einen Testton als Mikrofon
-und einen Beispieltext statt der Transkription. Den Test-Admin legen sie selbst in der Datenbank an.
+und einen Beispieltext statt der Transkription. Den Test-Admin legen sie selbst in der Datenbank an,
+ebenso eine Testgruppe X mit einer täglich offenen Abfrage und einem Studienstart in der Vorwoche.
+
+### Datenbank ändern
+
+Nach einer Änderung an `src/lib/db/schema.ts` die Migration erzeugen und anwenden:
+
+```bash
+npm run db:generate -- --name kurze-beschreibung
+npm run db:migrate
+```
+
+Auf dem Server laufen neue Migrationen beim nächsten Start des Containers automatisch.
 
 ## Umgebungsvariablen
 
@@ -192,16 +220,21 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
 
 ## Datenschutz
 
-- Bei der Registrierung willigen Nutzer ein, dass ihre Aufnahmen gespeichert, per KI transkribiert
-  und von der wissenschaftlichen Begleitung eingesehen werden.
+- Bei der Registrierung willigen Teilnehmende ein, dass ihre Aufnahmen gespeichert, per KI
+  transkribiert und von der wissenschaftlichen Begleitung eingesehen werden.
 - Die App speichert weder E-Mail-Adressen noch echte Namen. Konten heißen nach einem zufälligen
   Fantasienamen, den die App vorschlägt; eigene Namen lassen sich nicht eintragen.
+- Der persönliche Code verknüpft Antworten mit späteren Befragungen, ohne Namen zu erfassen. Die
+  App kennt nur Fantasiename, Code, Team und Gruppe. Eine Zuordnung zu echten Namen führt, falls
+  nötig, die Studienleitung außerhalb der App.
+- Gespeichert werden Skalenwerte, Audiodateien, Transkripte und Zeitpunkte der Abgabe. Das
+  Geschlecht oder andere Merkmale erfasst die App nicht.
+- Teilnehmende sehen nur ihre eigenen Einträge und von den Gruppen nur den Buchstaben. Die interne
+  Bezeichnung der Gruppen und die Fragen der anderen Gruppe bekommen sie nicht zu sehen.
 - Audio und Texte liegen in der EU, auf dem Server und im Object Storage bei Hetzner. Cortecs leitet
-  zur Transkription nur an Anbieter in der EU weiter.
-- Der persönliche Code verknüpft Einträge mit späteren Befragungen, ohne Namen zu erfassen. Die
-  App kennt nur Fantasiename, Code und Gruppe.
-- Nutzer können Einträge nicht selbst löschen. Auf Wunsch löscht ein Admin das ganze Konto samt
-  Einträgen und Audiodateien.
+  zur Transkription nur an Anbieter in der EU weiter. Sonst gibt die App keine Daten weiter.
+- Teilnehmende können Einträge nicht selbst löschen. Auf Wunsch löscht ein Admin das ganze Konto
+  samt Einträgen und Audiodateien.
 
 ## Bekannte Grenzen
 
@@ -210,3 +243,7 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
 - iOS beendet Aufnahmen, wenn der Bildschirm gesperrt oder die App gewechselt wird. Das bis dahin
   Gesprochene wird gesichert und hochgeladen.
 - Es gibt kein „Passwort vergessen" per Mail. Ein vergessenes Passwort setzt ein Admin zurück.
+- Zeitfenster liegen innerhalb einer Woche; eines von Freitag bis Montag ist nicht möglich.
+- Persönliche Codes können zufällig doppelt vorkommen. Die Übersicht weist darauf hin, auflösen
+  muss es die Studienleitung.
+- Es gibt keine Erinnerungen per Mail oder Push.

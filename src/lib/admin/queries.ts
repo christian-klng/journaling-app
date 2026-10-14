@@ -136,7 +136,6 @@ export async function getExportData(scope: ExportScope) {
   return { people, entries: personEntries, questionnaires: activeQuestionnaires };
 }
 
-export type ExportData = Awaited<ReturnType<typeof getExportData>>;
 
 /** Alles für die Teilnahme-Tabelle: Personen, aktive Abfragen und abgegebene Einträge. */
 export async function getParticipationData() {
