@@ -1,13 +1,12 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNotNull, isNull, max } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { entries, questionnaires, recordings, studyGroups, teams, users } from "@/lib/db/schema";
+import { entries, questionnaires, recordings, studyGroups, users } from "@/lib/db/schema";
 
 const memberColumns = {
   id: users.id,
   displayName: users.displayName,
   role: users.role,
-  teamId: users.teamId,
   codeStem: users.codeStem,
   studyGroupId: users.studyGroupId,
   createdAt: users.createdAt,
@@ -16,22 +15,22 @@ const memberColumns = {
 export type Member = {
   id: string;
   displayName: string;
-  teamId: string | null;
   codeStem: string | null;
+  studyGroupId: string | null;
   groupLetter: string | null;
   entryCount: number;
   lastEntryAt: Date | null;
 };
 
 export async function getOverview() {
-  const allTeams = await db.select().from(teams).orderBy(asc(teams.name));
+  const groups = await db.select().from(studyGroups).orderBy(asc(studyGroups.letter));
 
   const members: Member[] = await db
     .select({
       id: users.id,
       displayName: users.displayName,
-      teamId: users.teamId,
       codeStem: users.codeStem,
+      studyGroupId: users.studyGroupId,
       groupLetter: studyGroups.letter,
       entryCount: count(entries.id),
       lastEntryAt: max(entries.createdAt),
@@ -44,23 +43,14 @@ export async function getOverview() {
     .orderBy(asc(users.displayName));
 
   return {
-    teams: allTeams.map((team) => ({
-      ...team,
-      members: members.filter((m) => m.teamId === team.id),
+    groups: groups.map((group) => ({
+      ...group,
+      members: members.filter((m) => m.studyGroupId === group.id),
     })),
-    withoutTeam: members.filter((m) => m.teamId === null),
+    withoutGroup: members.filter((m) => m.studyGroupId === null),
     members,
     totalEntries: members.reduce((sum, m) => sum + m.entryCount, 0),
   };
-}
-
-export function listTeams() {
-  return db
-    .select({ id: teams.id, name: teams.name, memberCount: count(users.id) })
-    .from(teams)
-    .leftJoin(users, eq(users.teamId, teams.id))
-    .groupBy(teams.id)
-    .orderBy(asc(teams.name));
 }
 
 export function listAdmins() {
@@ -76,7 +66,7 @@ export async function getMember(userId: string) {
   return member ?? null;
 }
 
-export type ExportScope = { userId?: string; teamId?: string | "none" };
+export type ExportScope = { userId?: string; groupId?: string | "none" };
 
 /**
  * Personen im gewählten Umfang mit allen Einträgen, Antworten und Aufnahmen, dazu alles für die
@@ -85,10 +75,10 @@ export type ExportScope = { userId?: string; teamId?: string | "none" };
 export async function getExportData(scope: ExportScope) {
   const where = scope.userId
     ? and(eq(users.id, scope.userId), eq(users.role, "user"))
-    : scope.teamId === "none"
-      ? and(isNull(users.teamId), eq(users.role, "user"))
-      : scope.teamId
-        ? and(eq(users.teamId, scope.teamId), eq(users.role, "user"))
+    : scope.groupId === "none"
+      ? and(isNull(users.studyGroupId), eq(users.role, "user"))
+      : scope.groupId
+        ? and(eq(users.studyGroupId, scope.groupId), eq(users.role, "user"))
         : eq(users.role, "user");
 
   const people = await db
@@ -98,13 +88,11 @@ export async function getExportData(scope: ExportScope) {
       codeStem: users.codeStem,
       studyGroupId: users.studyGroupId,
       groupLetter: studyGroups.letter,
-      teamName: teams.name,
     })
     .from(users)
-    .leftJoin(teams, eq(teams.id, users.teamId))
     .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
     .where(where)
-    .orderBy(asc(teams.name), asc(users.displayName));
+    .orderBy(asc(studyGroups.letter), asc(users.displayName));
 
   const ids = people.map((p) => p.id);
   const [personEntries, activeQuestionnaires] = await Promise.all([
@@ -147,13 +135,11 @@ export async function getParticipationData() {
         codeStem: users.codeStem,
         studyGroupId: users.studyGroupId,
         groupLetter: studyGroups.letter,
-        teamName: teams.name,
       })
       .from(users)
       .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
-      .leftJoin(teams, eq(teams.id, users.teamId))
       .where(eq(users.role, "user"))
-      .orderBy(asc(teams.name), asc(users.displayName)),
+      .orderBy(asc(studyGroups.letter), asc(users.displayName)),
     db
       .select({
         id: questionnaires.id,

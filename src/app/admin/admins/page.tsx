@@ -2,44 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ConfirmForm } from "@/components/admin/confirm-form";
 import { CreateAdmin } from "@/components/admin/create-admin";
-import { CreateTeamForm, TeamRow } from "@/components/admin/team-forms";
 import { Button, Card } from "@/components/ui";
 import { deleteAdmin } from "@/lib/admin/actions";
-import { listAdmins, listTeams } from "@/lib/admin/queries";
+import { listAdmins } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 
-export const metadata: Metadata = { title: "Teams verwalten" };
+export const metadata: Metadata = { title: "Admins" };
 
-export default async function TeamsPage() {
+export default async function AdminsPage() {
   const me = await requireAdmin();
-  const [teams, admins] = await Promise.all([listTeams(), listAdmins()]);
+  const admins = await listAdmins();
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold">Teams verwalten</h1>
-        <p className="text-sm text-muted">
-          Diese Teams stehen bei der Registrierung zur Auswahl. Einzelne Personen ordnest du auf
-          ihrer jeweiligen Seite einem Team zu.
-        </p>
-      </div>
-
-      <Card className="space-y-2">
-        <CreateTeamForm />
-        {teams.length > 0 && (
-          <ul className="divide-y divide-border">
-            {teams.map((team) => (
-              // Schlüssel mit Namen, damit das Feld nach dem Umbenennen den neuen Stand zeigt
-              <TeamRow key={`${team.id}-${team.name}`} team={team} />
-            ))}
-          </ul>
-        )}
-      </Card>
-
       <Card className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h2 className="font-semibold">Admins</h2>
+            <h1 className="text-xl font-semibold">Admins</h1>
             <p className="text-sm text-muted">
               Admins sehen alle Einträge. Ihre Konten sind getrennt von denen der Teilnehmenden.
             </p>

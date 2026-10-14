@@ -32,7 +32,7 @@ export function GroupForm({ groups }: { groups: { id: string; letter: string }[]
       }}
       className="space-y-3"
     >
-      <Field label="Deine Gruppe" hint="Die Studienleitung teilt dir mit, ob du in Gruppe A oder B bist.">
+      <Field label="Deine Gruppe" hint="Die Studienleitung teilt dir mit, in welcher Gruppe du bist.">
         <select name="groupId" required defaultValue="" className={inputClass}>
           <option value="" disabled>
             Bitte wählen

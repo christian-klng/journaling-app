@@ -7,11 +7,9 @@ import { register, suggestName, type FormState } from "@/lib/auth/actions";
 
 export function RegisterForm({
   proposedName,
-  teams,
   groups,
 }: {
   proposedName: string;
-  teams: { id: string; name: string }[];
   groups: { id: string; letter: string }[];
 }) {
   const [name, setName] = useState(proposedName);
@@ -67,16 +65,6 @@ export function RegisterForm({
           minLength={8}
           className={inputClass}
         />
-      </Field>
-      <Field label="Team">
-        <select name="teamId" defaultValue={state?.fields?.teamId ?? ""} className={inputClass}>
-          <option value="">Kein Team</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
       </Field>
       <CodeFields defaults={state?.fields} />
       {groups.length > 0 && (

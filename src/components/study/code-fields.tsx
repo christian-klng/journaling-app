@@ -9,7 +9,7 @@ export function CodeFields({ defaults }: { defaults?: { mother?: string; month?:
       <p className="text-sm text-muted">
         Damit deine Einträge mit möglichen späteren Befragungen verknüpft werden können, ohne deinen
         Namen zu erfassen, bildest du einen persönlichen Code. Nur du kannst ihn erneut erzeugen. Der
-        letzte Teil, deine Gruppe A oder B, wird dir von der Studienleitung mitgeteilt. Beispiel:
+        letzte Teil ist der Buchstabe deiner Gruppe, den dir die Studienleitung mitteilt. Beispiel:
         KA-03-BE-A
       </p>
       <Field label="Die ersten beiden Buchstaben des Vornamens deiner Mutter">

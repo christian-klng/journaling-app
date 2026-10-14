@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "@/lib/db";
-import { studyGroups, teams, users } from "@/lib/db/schema";
+import { studyGroups, users } from "@/lib/db/schema";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
 import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
 import { isNameTaken, proposeName } from "./accounts";
@@ -31,7 +31,6 @@ const RegisterSchema = z.object({
   username: z.string(),
   password,
   passwordRepeat: z.string(),
-  teamId: z.union([z.literal(""), z.uuid()]),
   groupId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
 });
@@ -39,7 +38,6 @@ const RegisterSchema = z.object({
 export async function register(_state: FormState, formData: FormData): Promise<FormState> {
   const fields = {
     username: String(formData.get("username") ?? ""),
-    teamId: String(formData.get("teamId") ?? ""),
     groupId: String(formData.get("groupId") ?? ""),
     mother: String(formData.get("mother") ?? ""),
     month: String(formData.get("month") ?? ""),
@@ -75,13 +73,6 @@ export async function register(_state: FormState, formData: FormData): Promise<F
   };
   if (await isNameTaken(data.username)) return taken;
 
-  let teamId: string | null = null;
-  if (data.teamId) {
-    const [team] = await db.select({ id: teams.id }).from(teams).where(eq(teams.id, data.teamId));
-    if (!team) return { error: "Dieses Team gibt es nicht mehr. Bitte wähle ein anderes.", fields };
-    teamId = team.id;
-  }
-
   // Die Gruppe ist bei der Registrierung oft noch nicht bekannt und wird dann später nachgetragen
   let studyGroupId: string | null = null;
   if (data.groupId) {
@@ -97,7 +88,6 @@ export async function register(_state: FormState, formData: FormData): Promise<F
       loginName: normalizeLoginName(data.username),
       passwordHash: await hashPassword(data.password),
       role: "user",
-      teamId,
       codeStem: codeStemFromParts(code.data),
       studyGroupId,
       consentAt: new Date(),

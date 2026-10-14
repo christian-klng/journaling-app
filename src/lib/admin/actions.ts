@@ -10,7 +10,7 @@ import { createAdminAccount } from "@/lib/auth/accounts";
 import { generateTempPassword, hashPassword, TEMP_PASSWORD_TTL_MS } from "@/lib/auth/password";
 import { destroyAllSessions } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { recordings, studyGroups, teams, users } from "@/lib/db/schema";
+import { recordings, studyGroups, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { processRecording } from "@/lib/pipeline";
 import { setSetting, TRANSCRIPTION_PROMPT_KEY, TRANSCRIPTION_PROMPT_MAX_LENGTH } from "@/lib/settings";
@@ -18,65 +18,6 @@ import { deleteByPrefix } from "@/lib/storage";
 import { parseCodeStem, parseGroupAssignments } from "@/lib/study/code";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
-
-const teamName = z
-  .string()
-  .trim()
-  .min(1, "Bitte gib einen Namen ein.")
-  .max(60, "Der Name darf höchstens 60 Zeichen haben.");
-
-const isUniqueViolation = (error: unknown) =>
-  typeof error === "object" && error !== null && "code" in error && error.code === "23505";
-
-export async function createTeam(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await assertAdmin();
-  const parsed = teamName.safeParse(formData.get("name"));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  const created = await db.insert(teams).values({ name: parsed.data }).onConflictDoNothing().returning();
-  if (created.length === 0) return { error: "Ein Team mit diesem Namen gibt es schon." };
-
-  revalidatePath("/admin", "layout");
-  return { ok: true };
-}
-
-export async function renameTeam(
-  teamId: string,
-  _state: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  await assertAdmin();
-  const parsed = teamName.safeParse(formData.get("name"));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  try {
-    await db.update(teams).set({ name: parsed.data }).where(eq(teams.id, teamId));
-  } catch (error) {
-    if (isUniqueViolation(error)) return { error: "Ein Team mit diesem Namen gibt es schon." };
-    throw error;
-  }
-  revalidatePath("/admin", "layout");
-  return { ok: true };
-}
-
-/** Mitglieder bleiben erhalten und stehen danach unter "Ohne Team". */
-export async function deleteTeam(teamId: string) {
-  await assertAdmin();
-  await db.delete(teams).where(eq(teams.id, teamId));
-  revalidatePath("/admin", "layout");
-}
-
-export async function assignTeam(userId: string, formData: FormData) {
-  await assertAdmin();
-  const teamId = String(formData.get("teamId") ?? "");
-  if (teamId && !isUuid(teamId)) return;
-
-  await db
-    .update(users)
-    .set({ teamId: teamId || null })
-    .where(and(eq(users.id, userId), eq(users.role, "user")));
-  revalidatePath("/admin", "layout");
-}
 
 /** Admins können die Gruppe jederzeit setzen oder entfernen, Teilnehmende nur einmal selbst. */
 export async function assignStudyGroup(userId: string, formData: FormData) {

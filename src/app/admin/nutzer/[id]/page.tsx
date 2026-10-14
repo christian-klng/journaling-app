@@ -8,8 +8,8 @@ import { ExportLink } from "@/components/admin/export-link";
 import { ResetPassword } from "@/components/admin/reset-password";
 import { EntryView } from "@/components/entry-view";
 import { Button, Card } from "@/components/ui";
-import { assignStudyGroup, assignTeam, deleteParticipant, retryEntry } from "@/lib/admin/actions";
-import { getMember, listTeams } from "@/lib/admin/queries";
+import { assignStudyGroup, deleteParticipant, retryEntry } from "@/lib/admin/actions";
+import { getMember } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 import { entryTitle } from "@/lib/entry-title";
 import { isUuid, listEntries, toEntryDto } from "@/lib/entries";
@@ -26,8 +26,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
   const member = isUuid(id) ? await getMember(id) : null;
   if (!member) notFound();
 
-  const [teams, groups, entries, period] = await Promise.all([
-    listTeams(),
+  const [groups, entries, period] = await Promise.all([
     listStudyGroups(),
     listEntries(member.id),
     getStudyPeriod(),
@@ -53,20 +52,6 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
       </div>
 
       <Card className="space-y-4">
-        {member.role === "user" && (
-          <form action={assignTeam.bind(null, member.id)} className="space-y-1.5">
-            <span className="text-sm font-medium">Team</span>
-            <AutoSubmitSelect
-              name="teamId"
-              label="Team"
-              defaultValue={member.teamId ?? ""}
-              options={[
-                { value: "", label: "Ohne Team" },
-                ...teams.map((team) => ({ value: team.id, label: team.name })),
-              ]}
-            />
-          </form>
-        )}
         {member.role === "user" && (
           <form action={assignStudyGroup.bind(null, member.id)} className="space-y-1.5">
             <span className="text-sm font-medium">Gruppe</span>

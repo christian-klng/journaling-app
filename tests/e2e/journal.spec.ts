@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
   completeQuestionnaire,
-  ensureTeam,
   FLOW_GROUP,
   FLOW_QUESTIONNAIRE,
   login,
@@ -16,7 +15,6 @@ import {
   useFakeMicrophone,
 } from "./helpers";
 
-const TEAM = "E2E-Team";
 const TRANSCRIPT = "Das ist ein Beispieltranskript.";
 let userName = "";
 const userStem = randomCodeStem();
@@ -30,14 +28,13 @@ test.beforeEach(async ({ page }) => {
   await useFakeMicrophone(page);
 });
 
-test("Admin legt ein Team und die Studie an", async ({ page }) => {
+test("Admin legt die Studie an", async ({ page }) => {
   await loginAsAdmin(page);
-  await ensureTeam(page, TEAM);
   await setupStudy(page);
 });
 
 test("Nutzer registriert sich mit einem Fantasienamen als Benutzernamen", async ({ page }) => {
-  userName = await register(page, TEAM, { codeStem: userStem, group: FLOW_GROUP });
+  userName = await register(page, { codeStem: userStem, group: FLOW_GROUP });
   expect(userName).toMatch(/^\p{Lu}\p{L}+ \p{Lu}\p{L}+( \d+)?$/u);
   await expect(page.getByText(`Dein Benutzername ist ${userName}`)).toBeVisible();
   await expect(page.getByRole("button", { name: `Menü für ${userName}` })).toBeVisible();
@@ -121,13 +118,15 @@ test("Ohne Anmeldung geht nichts", async ({ page }) => {
   expect((await page.request.get(`/api/entries/${entryUrl.split("/").pop()}`)).status()).toBe(401);
 });
 
-test("Admin sieht die Person im Team und ihre Einträge", async ({ page }) => {
+test("Admin sieht die Person in ihrer Gruppe und ihre Einträge", async ({ page }) => {
   await loginAsAdmin(page);
 
-  const team = page.locator("details").filter({ has: page.getByRole("heading", { name: TEAM }) });
-  await expect(team.getByRole("link", { name: new RegExp(userName) })).toContainText("1 Eintrag");
+  const group = page
+    .locator("details")
+    .filter({ has: page.getByRole("heading", { name: new RegExp(`^Gruppe ${FLOW_GROUP}\\b`) }) });
+  await expect(group.getByRole("link", { name: new RegExp(userName) })).toContainText("1 Eintrag");
 
-  await team.getByRole("link", { name: new RegExp(userName) }).click();
+  await group.getByRole("link", { name: new RegExp(userName) }).click();
   await expect(page.getByRole("heading", { name: userName })).toBeVisible();
   await expect(page.getByRole("heading", { name: new RegExp(`Woche 2 · ${FLOW_QUESTIONNAIRE}`) })).toBeVisible();
   await expect(page.locator("audio")).toHaveCount(1);
@@ -146,7 +145,7 @@ test("Admin exportiert die Einträge als ZIP", async ({ page }) => {
   // Dateinamen stehen unkomprimiert im Archiv
   const names = zip.toString("latin1");
   const utf8 = (text: string) => Buffer.from(text, "utf8").toString("latin1");
-  const folder = `${TEAM}/${userCode}_${userName.replace(/ /g, "-")}/W02_${FLOW_QUESTIONNAIRE}`;
+  const folder = `Gruppe-${FLOW_GROUP}/${userCode}_${userName.replace(/ /g, "-")}/W02_${FLOW_QUESTIONNAIRE}`;
   for (const file of ["frage-03_aufnahme-01.mp3", "frage-03_aufnahme-01.txt"]) {
     expect(names).toContain(utf8(`${folder}/${file}`));
   }
@@ -208,7 +207,7 @@ test("Admin setzt das Passwort zurück, Nutzer muss ein neues vergeben", async (
 
 test("Admin legt ein weiteres Admin-Konto an und löscht es wieder", async ({ page }) => {
   await loginAsAdmin(page);
-  await page.goto("/admin/teams");
+  await page.goto("/admin/admins");
   await page.getByRole("button", { name: "Admin anlegen" }).click();
 
   const dialog = page.getByRole("dialog");
@@ -229,7 +228,7 @@ test("Admin legt ein weiteres Admin-Konto an und löscht es wieder", async ({ pa
   await logout(page);
 
   await loginAsAdmin(page);
-  await page.goto("/admin/teams");
+  await page.goto("/admin/admins");
   const row = page.getByRole("listitem").filter({ hasText: adminName });
   await row.getByRole("button", { name: "Konto löschen" }).click();
   await expect(row).toHaveCount(0);
@@ -248,16 +247,16 @@ test("Admin pflegt den Hinweistext für die Transkription", async ({ page }) => 
   await expect(page.getByLabel("Hinweistext für die Transkription")).toHaveValue(text);
 });
 
-test("Admin ordnet die Person einem anderen Team zu", async ({ page }) => {
+test("Admin nimmt die Person aus ihrer Gruppe", async ({ page }) => {
   await loginAsAdmin(page);
   await page.getByRole("link", { name: new RegExp(userName) }).click();
   await expect(page.getByRole("heading", { name: userName })).toBeVisible();
-  await page.getByLabel("Team").selectOption({ label: "Ohne Team" });
+  await page.getByLabel("Gruppe", { exact: true }).selectOption({ label: "Keine Gruppe" });
   await page.waitForLoadState("networkidle");
 
   await page.goto("/admin");
-  const withoutTeam = page
+  const withoutGroup = page
     .locator("details")
-    .filter({ has: page.getByRole("heading", { name: "Ohne Team" }) });
-  await expect(withoutTeam.getByRole("link", { name: new RegExp(userName) })).toBeVisible();
+    .filter({ has: page.getByRole("heading", { name: "Ohne Gruppe" }) });
+  await expect(withoutGroup.getByRole("link", { name: new RegExp(userName) })).toBeVisible();
 });

@@ -93,7 +93,6 @@ export default async function ParticipationPage() {
                       </Link>
                       <span className="block font-mono text-xs text-muted">
                         {formatCode(person.codeStem, person.groupLetter) ?? "kein Code"}
-                        {person.teamName && ` · ${person.teamName}`}
                       </span>
                     </th>
                     <td className="px-2 py-2 tabular-nums">

@@ -22,12 +22,6 @@ export const recordingStatusEnum = pgEnum("recording_status", [
   "failed",
 ]);
 
-export const teams = pgTable("teams", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const users = pgTable(
   "users",
   {
@@ -38,7 +32,6 @@ export const users = pgTable(
     // Fantasiename in Kleinbuchstaben und ohne Umlaute, damit die Anmeldung Tippvarianten verzeiht
     loginName: text("login_name").notNull().unique(),
     role: roleEnum("role").notNull().default("user"),
-    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
     // Persönlicher Code ohne Gruppenbuchstaben, z. B. "KA-03-BE". Nur bei Teilnehmenden.
     codeStem: text("code_stem"),
     // Setzen Teilnehmende einmal selbst, danach ändern ihn nur Admins
@@ -48,7 +41,7 @@ export const users = pgTable(
     consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("users_team_idx").on(t.teamId), index("users_code_stem_idx").on(t.codeStem)],
+  (t) => [index("users_code_stem_idx").on(t.codeStem)],
 );
 
 export const sessions = pgTable(
@@ -211,10 +204,7 @@ export const questionnaireItems = pgTable(
   (t) => [index("questionnaire_items_questionnaire_idx").on(t.questionnaireId, t.position)],
 );
 
-export const teamsRelations = relations(teams, ({ many }) => ({ users: many(users) }));
-
 export const usersRelations = relations(users, ({ one, many }) => ({
-  team: one(teams, { fields: [users.teamId], references: [teams.id] }),
   studyGroup: one(studyGroups, { fields: [users.studyGroupId], references: [studyGroups.id] }),
   entries: many(entries),
 }));
@@ -252,7 +242,6 @@ export const questionnaireItemsRelations = relations(questionnaireItems, ({ one 
 }));
 
 export type User = typeof users.$inferSelect;
-export type Team = typeof teams.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type Recording = typeof recordings.$inferSelect;
 export type Answer = typeof answers.$inferSelect;

@@ -2,7 +2,7 @@
 
 Web-App für regelmäßige, gesprochene Rückblicke auf Projekt- oder Gründungsarbeit. Teilnehmende
 beantworten wöchentliche Abfragen (z. B. Check-In und Check-Out) mit Skalen und gesprochenen
-Antworten, die App transkribiert die Aufnahmen. Admins begleiten die Teams wissenschaftlich, legen
+Antworten, die App transkribiert die Aufnahmen. Admins begleiten die Teilnehmenden wissenschaftlich, legen
 die Abfragen pro Gruppe fest, sehen alle Einträge und exportieren sie als ZIP.
 
 Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
@@ -11,7 +11,7 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 
 **Teilnehmende**
 
-- Registrierung mit Passwort, Team und persönlichem Code. Jede Person bekommt einen zufälligen
+- Registrierung mit Passwort und persönlichem Code. Jede Person bekommt einen zufälligen
   Fantasienamen, der zugleich der Benutzername ist. Die App speichert keine E-Mail-Adressen und
   keine echten Namen.
 - Der persönliche Code (z. B. KA-03-BE-A) besteht aus den ersten zwei Buchstaben des Vornamens
@@ -36,31 +36,30 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   der Teilnehmenden, Kopieren in eine andere Gruppe, Import und Export als JSON. Abfragen und
   Fragen werden archiviert statt gelöscht; Textkorrekturen sind jederzeit möglich, gegebene
   Antworten behalten den Text, den die Person gesehen hat.
-- *Übersicht:* alle Teams mit ihren Mitgliedern, deren Code und Gruppe. Doppelte Codes werden
-  angezeigt. Gruppen lassen sich einzeln oder gesammelt über eine Liste von Codes zuweisen.
-- *Personenseite:* Einträge lesen und anhören, Team und Gruppe ändern, Code korrigieren, Passwort
+- *Übersicht:* alle Teilnehmenden nach Gruppe geordnet, mit Code und Zahl der Einträge. Doppelte
+  Codes werden angezeigt. Gruppen lassen sich einzeln oder gesammelt über eine Liste von Codes zuweisen.
+- *Personenseite:* Einträge lesen und anhören, Gruppe ändern, Code korrigieren, Passwort
   zurücksetzen (Einmal-Passwort, 72 Stunden gültig), Konto samt Einträgen und Audiodateien löschen.
 - *Teilnahme:* Tabelle pro Person und Woche, ob jede Abfrage erledigt, nachgeholt, begonnen oder
   verpasst ist.
-- *Export* als ZIP für alles, ein Team oder eine Person: `antworten.csv` mit einer Zeile pro
-  beantworteter Frage, `teilnahme.csv`, Audiodateien mit Transkripten in Ordnern nach Team, Code und
-  Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
-- *Teams* anlegen, umbenennen und löschen; weitere Admins anlegen. Admin-Konten sind von denen der
-  Teilnehmenden getrennt.
+- *Export* als ZIP für alles, eine Gruppe oder eine Person: `antworten.csv` mit einer Zeile pro
+  beantworteter Frage, `teilnahme.csv`, Audiodateien mit Transkripten in Ordnern nach Gruppe, Code
+  und Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
+- *Admins:* weitere Admins anlegen und löschen. Admin-Konten sind von denen der Teilnehmenden
+  getrennt.
 - *Einstellungen:* Hinweistext für die Transkription mit Namen, Fachbegriffen und Abkürzungen, die
   das Modell richtig schreiben soll.
 
 ## Ablauf einer Studie
 
-1. Unter **Teams** die Teams anlegen, die bei der Registrierung zur Auswahl stehen.
-2. Unter **Studie** die Gruppen und Abfragen anlegen oder eine vorbereitete JSON-Datei importieren.
+1. Unter **Studie** die Gruppen und Abfragen anlegen oder eine vorbereitete JSON-Datei importieren.
    Die Fragen gehören nicht ins Repository; die Importdatei bleibt bei der Studienleitung.
-3. Den **Studienzeitraum** eintragen. Ohne ihn sehen Teilnehmende keine Fragen.
-4. Die Teilnehmenden registrieren sich und bilden dabei ihren persönlichen Code.
-5. Nach der Teambildung die Gruppen mitteilen. Die Teilnehmenden tragen sie selbst ein, oder die
-   Studienleitung weist sie in der Übersicht gesammelt über die Codes zu.
-6. Während der Studie unter **Teilnahme** verfolgen, wer welche Abfrage erledigt hat.
-7. Zum Schluss alles als ZIP exportieren.
+2. Den **Studienzeitraum** eintragen. Ohne ihn sehen Teilnehmende keine Fragen.
+3. Die Teilnehmenden registrieren sich und bilden dabei ihren persönlichen Code.
+4. Sobald die Gruppen feststehen, sie den Teilnehmenden mitteilen. Diese tragen sie selbst ein,
+   oder die Studienleitung weist sie in der Übersicht gesammelt über die Codes zu.
+5. Während der Studie unter **Teilnahme** verfolgen, wer welche Abfrage erledigt hat.
+6. Zum Schluss alles als ZIP exportieren.
 
 ## Zeitplan
 
@@ -205,8 +204,7 @@ node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON sc
 ```
 
 Das Skript gibt Benutzername und Einmal-Passwort aus. Nach der ersten Anmeldung vergibt der Admin
-ein eigenes Passwort und legt unter „Teams" die Teams an, die bei der Registrierung zur Auswahl
-stehen.
+ein eigenes Passwort und legt unter „Studie" die Gruppen und Abfragen an.
 
 ### Lange Uploads
 
@@ -225,7 +223,7 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
 - Die App speichert weder E-Mail-Adressen noch echte Namen. Konten heißen nach einem zufälligen
   Fantasienamen, den die App vorschlägt; eigene Namen lassen sich nicht eintragen.
 - Der persönliche Code verknüpft Antworten mit späteren Befragungen, ohne Namen zu erfassen. Die
-  App kennt nur Fantasiename, Code, Team und Gruppe. Eine Zuordnung zu echten Namen führt, falls
+  App kennt nur Fantasiename, Code und Gruppe. Eine Zuordnung zu echten Namen führt, falls
   nötig, die Studienleitung außerhalb der App.
 - Gespeichert werden Skalenwerte, Audiodateien, Transkripte und Zeitpunkte der Abgabe. Das
   Geschlecht oder andere Merkmale erfasst die App nicht.

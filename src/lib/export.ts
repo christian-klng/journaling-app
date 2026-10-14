@@ -15,10 +15,14 @@ export function safeName(name: string) {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Ordner einer Person: Team, dann Code und Fantasiename, damit auch doppelte Codes getrennt bleiben. */
-export function personFolder(input: { teamName: string | null; code: string | null; displayName: string }) {
+/**
+ * Ordner einer Person: aktuelle Gruppe, dann Code und Fantasiename, damit auch doppelte Codes
+ * getrennt bleiben.
+ */
+export function personFolder(input: { groupLetter: string | null; code: string | null; displayName: string }) {
   const person = input.code ? `${input.code.replace("?", "X")}_${input.displayName}` : input.displayName;
-  return [safeName(input.teamName ?? "Ohne Team"), safeName(person)].join("/");
+  const group = input.groupLetter ? `Gruppe ${input.groupLetter}` : "Ohne Gruppe";
+  return [safeName(group), safeName(person)].join("/");
 }
 
 /** "W03_Check-In"; Einträge aus der Zeit vor den Abfragen nach Datum. */
@@ -40,7 +44,6 @@ export const recordingBaseName = (questionNumber: number | null, position: numbe
 export const ANSWER_COLUMNS = [
   "Code",
   "Fantasiename",
-  "Team",
   "Gruppe",
   "Woche",
   "Wochenbeginn",
@@ -67,7 +70,6 @@ type ItemType = keyof typeof TYPE_LABELS;
 export type ExportEntry = {
   code: string | null;
   displayName: string;
-  teamName: string | null;
   /** Gruppe beim Ausfüllen */
   groupLetter: string | null;
   questionnaireName: string | null;
@@ -102,7 +104,6 @@ export function answerRows(entry: ExportEntry): (string | number | null)[][] {
   const base = [
     entry.code,
     entry.displayName,
-    entry.teamName ?? "Ohne Team",
     entry.groupLetter,
     entry.weekNumber,
     entry.weekStart,
@@ -150,7 +151,7 @@ export function answerRows(entry: ExportEntry): (string | number | null)[][] {
     .map((row) => [...base, row.number, row.itemId, TYPE_LABELS[row.type], row.text, ...row.cells]);
 }
 
-export const PARTICIPATION_COLUMNS = ["Code", "Fantasiename", "Team", "Gruppe", "Woche", "Wochenbeginn", "Abfrage", "Status"] as const;
+export const PARTICIPATION_COLUMNS = ["Code", "Fantasiename", "Gruppe", "Woche", "Wochenbeginn", "Abfrage", "Status"] as const;
 
 export const PARTICIPATION_LABELS = {
   done: "erledigt",
@@ -179,8 +180,9 @@ teilnahme.csv
   Status: erledigt, nachgeholt, begonnen, verpasst, läuft, kommt noch
 
 Ordner
-  Team / Code_Fantasiename / Woche_Abfrage / frage-NN_aufnahme-NN.mp3 und .txt (Transkript)
-  Ein X im Code steht für eine noch fehlende Gruppe.
+  Gruppe / Code_Fantasiename / Woche_Abfrage / frage-NN_aufnahme-NN.mp3 und .txt (Transkript)
+  Der erste Ordner ist die aktuelle Gruppe der Person. Ein X im Code steht für eine noch
+  fehlende Gruppe.
 
 Woche 1 ist die Woche, in die der Studienstart fällt. Alle Zeiten in deutscher Zeit.
 `;

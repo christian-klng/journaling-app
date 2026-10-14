@@ -40,11 +40,11 @@ export async function GET(request: Request) {
 
     const params = new URL(request.url).searchParams;
     const userId = params.get("user");
-    const teamId = params.get("team");
+    const groupId = params.get("group");
     if (userId && !isUuid(userId)) throw new HttpError(400, "Ungültige Nutzer-ID");
-    if (teamId && teamId !== "none" && !isUuid(teamId)) throw new HttpError(400, "Ungültige Team-ID");
+    if (groupId && groupId !== "none" && !isUuid(groupId)) throw new HttpError(400, "Ungültige Gruppen-ID");
 
-    const scope: ExportScope = userId ? { userId } : teamId ? { teamId } : {};
+    const scope: ExportScope = userId ? { userId } : groupId ? { groupId } : {};
     const [data, period] = await Promise.all([getExportData(scope), getStudyPeriod()]);
     const root = `export_${formatIsoDate(new Date())}`;
 
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
 
       for (const person of data.people) {
         const code = formatCode(person.codeStem, person.groupLetter);
-        const base = personFolder({ teamName: person.teamName, code, displayName: person.displayName });
+        const base = personFolder({ groupLetter: person.groupLetter, code, displayName: person.displayName });
         let freeNumber = 0;
 
         for (const entry of data.entries.filter((e) => e.userId === person.id)) {
@@ -107,7 +107,6 @@ export async function GET(request: Request) {
             ...answerRows({
               code,
               displayName: person.displayName,
-              teamName: person.teamName,
               groupLetter: entry.studyGroup?.letter ?? null,
               questionnaireName: entry.questionnaire?.name ?? null,
               weekNumber: weekNo,
@@ -142,7 +141,6 @@ export async function GET(request: Request) {
                 : [[
                     formatCode(person.codeStem, person.groupLetter),
                     person.displayName,
-                    person.teamName ?? "Ohne Team",
                     person.groupLetter,
                     participation.weeks[w].weekNumber,
                     participation.weeks[w].weekStart,

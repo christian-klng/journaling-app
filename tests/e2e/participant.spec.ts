@@ -40,7 +40,7 @@ test("Teilnehmende sehen bei der Registrierung nur die Buchstaben der Gruppen", 
 });
 
 test("Ohne Gruppe blinkt ein roter Punkt, die Gruppe lässt sich einmal eintragen", async ({ page }) => {
-  userName = await register(page, undefined, { codeStem: stem });
+  userName = await register(page, { codeStem: stem });
   await expect(page.getByText("Deine Gruppe fehlt noch.")).toBeVisible();
   await expect(page.getByRole("button", { name: `Menü für ${userName}, Gruppe fehlt` })).toBeVisible();
 
@@ -61,7 +61,7 @@ test("Ohne Gruppe blinkt ein roter Punkt, die Gruppe lässt sich einmal eintrage
 });
 
 test("Die Gruppe lässt sich schon bei der Registrierung wählen", async ({ page }) => {
-  await register(page, undefined, { group: "Y" });
+  await register(page, { group: "Y" });
   await expect(page.getByText("Deine Gruppe fehlt noch.")).toHaveCount(0);
   await page.goto("/profil");
   await expect(page.getByText("Gruppe Y", { exact: true })).toBeVisible();
@@ -90,7 +90,7 @@ test("Admin weist Gruppen gesammelt zu", async ({ page }) => {
 });
 
 test("Doppelte Codes fallen auf und lassen sich korrigieren", async ({ page }) => {
-  twinName = await register(page, undefined, { codeStem: stem, group: FLOW_GROUP });
+  twinName = await register(page, { codeStem: stem, group: FLOW_GROUP });
   await completeQuestionnaire(page);
   await logout(page);
 

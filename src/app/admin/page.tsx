@@ -7,17 +7,16 @@ import { getOverview, type Member } from "@/lib/admin/queries";
 import { formatShortDate } from "@/lib/format";
 import { findDuplicateCodes, formatCode } from "@/lib/study/code";
 
-export const metadata: Metadata = { title: "Teams" };
+export const metadata: Metadata = { title: "Übersicht" };
 
 export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
   const [overview, params] = await Promise.all([getOverview(), searchParams]);
   const duplicates = findDuplicateCodes(overview.members);
-  const hasMembers = overview.teams.some((t) => t.members.length > 0) || overview.withoutTeam.length > 0;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Teams</h1>
+        <h1 className="text-xl font-semibold">Übersicht</h1>
         {overview.totalEntries > 0 && <ExportLink label="Alles exportieren" size="md" />}
       </div>
 
@@ -39,21 +38,26 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
         </div>
       )}
 
-      {!hasMembers && overview.teams.length === 0 && (
+      {overview.members.length === 0 && (
         <p className="text-muted">
-          Noch ist niemand registriert. Lege unter{" "}
-          <Link href="/admin/teams" className="font-medium text-accent underline underline-offset-4">
-            Teams
+          Noch ist niemand registriert. Unter{" "}
+          <Link href="/admin/studie" className="font-medium text-accent underline underline-offset-4">
+            Studie
           </Link>{" "}
-          die Teams an, die bei der Registrierung zur Auswahl stehen sollen.
+          legst du die Gruppen an, die bei der Registrierung zur Auswahl stehen.
         </p>
       )}
 
-      {overview.teams.map((team) => (
-        <TeamCard key={team.id} name={team.name} members={team.members} exportQuery={`?team=${team.id}`} />
+      {overview.groups.map((group) => (
+        <GroupCard
+          key={group.id}
+          name={`Gruppe ${group.letter}${group.label ? ` – ${group.label}` : ""}`}
+          members={group.members}
+          exportQuery={`?group=${group.id}`}
+        />
       ))}
-      {(overview.withoutTeam.length > 0 || overview.teams.length > 0) && (
-        <TeamCard name="Ohne Team" members={overview.withoutTeam} exportQuery="?team=none" muted />
+      {overview.withoutGroup.length > 0 && (
+        <GroupCard name="Ohne Gruppe" members={overview.withoutGroup} exportQuery="?group=none" muted />
       )}
 
       {overview.members.length > 0 && (
@@ -73,7 +77,7 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
   );
 }
 
-function TeamCard({
+function GroupCard({
   name,
   members,
   exportQuery,
@@ -129,7 +133,7 @@ function TeamCard({
           )}
           {hasEntries && (
             <div className="border-t border-border px-4 py-3">
-              <ExportLink query={exportQuery} label="Team exportieren" />
+              <ExportLink query={exportQuery} label="Gruppe exportieren" />
             </div>
           )}
         </div>

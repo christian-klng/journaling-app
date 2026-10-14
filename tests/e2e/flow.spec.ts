@@ -33,7 +33,7 @@ test("Ohne Gruppe gibt es keine Fragen", async ({ page }) => {
 });
 
 test("Die Startseite zeigt die offene Abfrage und die verpasste zum Nachholen", async ({ page }) => {
-  userName = await register(page, undefined, { group: FLOW_GROUP });
+  userName = await register(page, { group: FLOW_GROUP });
   await expect(page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) })).toBeVisible();
   const makeUp = page.locator("section").filter({ has: page.getByRole("heading", { name: "Nachholen" }) });
   await expect(makeUp).toContainText(`Woche 1 · ${FLOW_QUESTIONNAIRE}`);
@@ -41,7 +41,7 @@ test("Die Startseite zeigt die offene Abfrage und die verpasste zum Nachholen", 
 });
 
 test("Teilnehmende füllen die Abfrage Schritt für Schritt aus", async ({ page }) => {
-  await register(page, undefined, { group: FLOW_GROUP });
+  await register(page, { group: FLOW_GROUP });
   await page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) }).click();
   await expect(page.getByText("Bitte beantworte die folgenden Fragen.")).toBeVisible();
   await page.getByRole("button", { name: "Los geht's" }).click();
@@ -78,7 +78,7 @@ test("Teilnehmende füllen die Abfrage Schritt für Schritt aus", async ({ page 
 });
 
 test("Eine unterbrochene Abfrage lässt sich fortsetzen und nachholen", async ({ page }) => {
-  await register(page, undefined, { group: FLOW_GROUP });
+  await register(page, { group: FLOW_GROUP });
   const makeUp = page.locator("section").filter({ has: page.getByRole("heading", { name: "Nachholen" }) });
   await makeUp.getByRole("link", { name: "Nachholen" }).click();
   await expect(page.getByText("Woche 1 ·")).toBeVisible();
@@ -108,7 +108,7 @@ test("Eine unterbrochene Abfrage lässt sich fortsetzen und nachholen", async ({
 });
 
 test("Uploads brauchen einen eigenen Eintrag und eine Audio-Frage", async ({ page }) => {
-  await register(page, undefined, { group: FLOW_GROUP });
+  await register(page, { group: FLOW_GROUP });
   const response = await page.request.post("/api/recordings", {
     multipart: {
       file: { name: "a.webm", mimeType: "audio/webm", buffer: Buffer.from("x") },

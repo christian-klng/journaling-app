@@ -12,14 +12,14 @@ import {
 } from "@/lib/export";
 
 describe("Export-Pfade", () => {
-  it("legt Personen nach Team, Code und Name ab", () => {
-    expect(personFolder({ teamName: "Team Alpha", code: "KA-03-BE-A", displayName: "Mutiger Otter" })).toBe(
-      "Team-Alpha/KA-03-BE-A_Mutiger-Otter",
+  it("legt Personen nach Gruppe, Code und Name ab", () => {
+    expect(personFolder({ groupLetter: "A", code: "KA-03-BE-A", displayName: "Mutiger Otter" })).toBe(
+      "Gruppe-A/KA-03-BE-A_Mutiger-Otter",
     );
-    expect(personFolder({ teamName: null, code: "KA-03-BE-?", displayName: "Kluge Eule" })).toBe(
-      "Ohne-Team/KA-03-BE-X_Kluge-Eule",
+    expect(personFolder({ groupLetter: null, code: "KA-03-BE-?", displayName: "Kluge Eule" })).toBe(
+      "Ohne-Gruppe/KA-03-BE-X_Kluge-Eule",
     );
-    expect(personFolder({ teamName: null, code: null, displayName: "Kluge Eule" })).toBe("Ohne-Team/Kluge-Eule");
+    expect(personFolder({ groupLetter: null, code: null, displayName: "Kluge Eule" })).toBe("Ohne-Gruppe/Kluge-Eule");
   });
 
   it("benennt Einträge nach Woche und Abfrage", () => {
@@ -31,7 +31,7 @@ describe("Export-Pfade", () => {
 
   it("entfernt Zeichen, die aus dem Ordner ausbrechen könnten", () => {
     expect(safeName("../../etc/passwd")).toBe("etcpasswd");
-    expect(safeName("Team: Grün & Blau")).toBe("Team-Grün-Blau");
+    expect(safeName("Gruppe: Grün & Blau")).toBe("Gruppe-Grün-Blau");
     expect(safeName("   ")).toBe("unbenannt");
   });
 
@@ -45,7 +45,6 @@ describe("antworten.csv", () => {
   const entry: ExportEntry = {
     code: "KA-03-BE-A",
     displayName: "Mutiger Otter",
-    teamName: "Alpha",
     groupLetter: "A",
     questionnaireName: "Check-Out",
     weekNumber: 2,

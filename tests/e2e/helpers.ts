@@ -26,18 +26,13 @@ async function resetRegistrationLimit() {
 }
 
 /** Registriert ein Konto und gibt den vergebenen Fantasienamen zurück. */
-export async function register(
-  page: Page,
-  team?: string,
-  options: { codeStem?: string; group?: string } = {},
-) {
+export async function register(page: Page, options: { codeStem?: string; group?: string } = {}) {
   const [mother, month, birthplace] = (options.codeStem ?? randomCodeStem()).split("-");
   await resetRegistrationLimit();
   await page.goto("/registrieren");
   const name = await page.getByLabel("Dein Benutzername").inputValue();
   await page.getByLabel("Passwort", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Passwort wiederholen").fill(PASSWORD);
-  if (team) await page.getByLabel("Team").selectOption({ label: team });
   await page.getByLabel("Vornamens deiner Mutter").fill(mother.toLowerCase());
   await page.getByLabel("Dein Geburtsmonat").selectOption(month);
   await page.getByLabel("Geburtsortes").fill(birthplace);
@@ -75,14 +70,6 @@ export async function ensureGroup(page: Page, letter: string) {
   await page.getByLabel("Interne Bezeichnung der neuen Gruppe").fill(`E2E Gruppe ${letter}`);
   await page.getByRole("button", { name: "Gruppe anlegen" }).click();
   await expect(heading).toBeVisible();
-}
-
-export async function ensureTeam(page: Page, name: string) {
-  await page.goto("/admin/teams");
-  if ((await page.getByLabel(`Name von Team ${name}`).count()) > 0) return;
-  await page.getByLabel("Name des neuen Teams").fill(name);
-  await page.getByRole("button", { name: "Team anlegen" }).click();
-  await expect(page.getByLabel(`Name von Team ${name}`)).toBeVisible();
 }
 
 /**
