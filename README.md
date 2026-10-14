@@ -1,8 +1,9 @@
 # Journaling – Audio-Tagebuch
 
-Web-App für regelmäßige, gesprochene Rückblicke auf Projekt- oder Gründungsarbeit. Nutzer sprechen
-einen Eintrag ein, die App transkribiert ihn. Admins begleiten die Teams wissenschaftlich, sehen alle
-Einträge und exportieren sie als ZIP.
+Web-App für regelmäßige, gesprochene Rückblicke auf Projekt- oder Gründungsarbeit. Teilnehmende
+beantworten wöchentliche Abfragen (z. B. Check-In und Check-Out) mit Skalen und gesprochenen
+Antworten, die App transkribiert die Aufnahmen. Admins begleiten die Teams wissenschaftlich, legen
+die Abfragen pro Gruppe fest, sehen alle Einträge und exportieren sie als ZIP.
 
 Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 
@@ -18,10 +19,13 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   Buchstaben des Vornamens der Mutter, Geburtsmonat, erste zwei Buchstaben des Geburtsortes. Der
   letzte Teil ist die Gruppe. Sie lässt sich bei der Registrierung oder später unter „Code und
   Gruppe" genau einmal selbst eintragen; solange sie fehlt, blinkt ein roter Punkt.
-- „Neuer Eintrag" öffnet ein Modal, die Aufnahme startet sofort.
-- Nach der Aufnahme erscheint das Transkript.
-- „Aufnahme fortsetzen" hängt weitere Aufnahmen an einen Eintrag.
-- Eigene Aufnahmen lassen sich anhören.
+- Die Startseite zeigt die Abfragen der eigenen Gruppe, deren Zeitfenster gerade läuft, dazu
+  verpasste Abfragen zum Nachholen und die nächste, die noch kommt. Ohne Gruppe gibt es keine Fragen.
+- Eine Abfrage führt Schritt für Schritt durch ihre Fragen: Smiley-Skala, Skala 0–10 oder Audio-Frage.
+  Pflichtfragen lassen sich nicht überspringen. Jede Antwort wird sofort gespeichert; eine
+  unterbrochene Abfrage geht bei der ersten offenen Frage weiter.
+- Auf eine Audio-Frage antwortet man mit einer oder mehreren Aufnahmen. Sie werden transkribiert.
+- Erledigte Abfragen lassen sich mit Antworten, Aufnahmen und Transkripten ansehen.
 - Bricht der Upload ab, bleibt die Aufnahme auf dem Gerät gesichert und kann später gesendet werden.
 
 **Admins**
@@ -29,6 +33,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Startseite mit allen Teams und ihren Mitgliedern, dazu die Gruppe „Ohne Team".
 - Teams anlegen, umbenennen, löschen. Personen einem Team zuordnen.
 - Einträge jeder Person lesen und anhören.
+- Teilnahme-Tabelle (unter „Teilnahme"): pro Person und Woche, ob jede Abfrage erledigt,
+  nachgeholt, begonnen oder verpasst ist.
 - Persönlicher Code und Gruppe in der Übersicht. Doppelte Codes werden angezeigt. Gruppen lassen
   sich auf der Seite der Person oder gesammelt über eine Liste von Codes zuweisen, Codes korrigieren.
 - Konten von Teilnehmenden löschen, mit allen Einträgen und Audiodateien.

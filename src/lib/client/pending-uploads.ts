@@ -3,7 +3,9 @@
 
 export type PendingUpload = {
   id: string;
-  entryId: string | null;
+  entryId: string;
+  /** Audio-Frage, auf die die Aufnahme antwortet */
+  itemId: string;
   blob: Blob;
   durationMs: number;
   createdAt: number;
@@ -60,7 +62,8 @@ export async function uploadRecording(upload: PendingUpload) {
   body.set("file", upload.blob);
   body.set("recordingId", upload.id);
   body.set("durationMs", String(upload.durationMs));
-  if (upload.entryId) body.set("entryId", upload.entryId);
+  body.set("entryId", upload.entryId);
+  body.set("itemId", upload.itemId);
 
   const response = await fetch("/api/recordings", { method: "POST", body });
   if (!response.ok) {

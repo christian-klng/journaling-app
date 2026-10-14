@@ -1,6 +1,7 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   smallint,
@@ -13,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", ["user", "admin"]);
+export const itemTypeEnum = pgEnum("item_type", ["smiley", "scale", "audio"]);
 export const recordingStatusEnum = pgEnum("recording_status", [
   "uploaded",
   "transcribing",
@@ -80,10 +82,46 @@ export const entries = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    // Abfrage und Woche (Montag), zu der der Eintrag gehört. Leer bei freien Einträgen aus der
+    // Zeit vor den Abfragen.
+    questionnaireId: uuid("questionnaire_id").references(() => questionnaires.id, { onDelete: "restrict" }),
+    weekStart: date("week_start"),
+    // Gruppe beim Ausfüllen, damit ein späterer Gruppenwechsel alte Einträge nicht umschreibt
+    studyGroupId: uuid("study_group_id").references(() => studyGroups.id, { onDelete: "restrict" }),
+    // Nach dem Ende des Zeitfensters begonnen
+    late: boolean("late").notNull().default(false),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("entries_user_idx").on(t.userId, t.createdAt)],
+  (t) => [
+    index("entries_user_idx").on(t.userId, t.createdAt),
+    // Pro Person, Abfrage und Woche gibt es genau einen Eintrag
+    uniqueIndex("entries_user_questionnaire_week_idx")
+      .on(t.userId, t.questionnaireId, t.weekStart)
+      .where(sql`${t.questionnaireId} is not null`),
+  ],
+);
+
+/** Antworten auf Skalen. Audio-Antworten sind Aufnahmen und stehen in recordings. */
+export const answers = pgTable(
+  "answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => questionnaireItems.id, { onDelete: "restrict" }),
+    // Typ und Text so, wie die Person sie gesehen hat
+    itemType: itemTypeEnum("item_type").notNull(),
+    itemText: text("item_text").notNull(),
+    value: smallint("value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("answers_entry_item_idx").on(t.entryId, t.itemId)],
 );
 
 export const recordings = pgTable(
@@ -94,6 +132,9 @@ export const recordings = pgTable(
       .notNull()
       .references(() => entries.id, { onDelete: "cascade" }),
     position: integer("position").notNull(),
+    // Audio-Frage, auf die die Aufnahme antwortet, mit dem Text, den die Person gesehen hat
+    itemId: uuid("item_id").references(() => questionnaireItems.id, { onDelete: "restrict" }),
+    itemText: text("item_text"),
     storageKeyOriginal: text("storage_key_original").notNull(),
     storageKeyMp3: text("storage_key_mp3"),
     mimeType: text("mime_type").notNull(),
@@ -119,8 +160,6 @@ export const settings = pgTable("settings", {
 // Studienablauf: Gruppen mit ihren Abfragen (z. B. Check-In und Check-Out). Alles wird im
 // Admin-Bereich gepflegt und steht bewusst nicht im Code, damit das öffentliche Repository die
 // Fragen der Gruppen nicht verrät.
-
-export const itemTypeEnum = pgEnum("item_type", ["smiley", "scale", "audio"]);
 
 export const studyGroups = pgTable("study_groups", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -182,7 +221,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 
 export const entriesRelations = relations(entries, ({ one, many }) => ({
   user: one(users, { fields: [entries.userId], references: [users.id] }),
+  questionnaire: one(questionnaires, { fields: [entries.questionnaireId], references: [questionnaires.id] }),
+  studyGroup: one(studyGroups, { fields: [entries.studyGroupId], references: [studyGroups.id] }),
   recordings: many(recordings),
+  answers: many(answers),
+}));
+
+export const answersRelations = relations(answers, ({ one }) => ({
+  entry: one(entries, { fields: [answers.entryId], references: [entries.id] }),
 }));
 
 export const recordingsRelations = relations(recordings, ({ one }) => ({
@@ -209,6 +255,7 @@ export type User = typeof users.$inferSelect;
 export type Team = typeof teams.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type Recording = typeof recordings.$inferSelect;
+export type Answer = typeof answers.$inferSelect;
 export type StudyGroup = typeof studyGroups.$inferSelect;
 export type Questionnaire = typeof questionnaires.$inferSelect;
 export type QuestionnaireItem = typeof questionnaireItems.$inferSelect;

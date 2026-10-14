@@ -1,5 +1,6 @@
 import { assertUser, errorResponse, HttpError } from "@/lib/auth/guards";
 import { getAccessibleEntry, isUuid, toEntryDto } from "@/lib/entries";
+import { getStudyPeriod } from "@/lib/settings";
 
 export async function GET(_request: Request, ctx: RouteContext<"/api/entries/[id]">) {
   try {
@@ -8,7 +9,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/entries/[id
     const entry = isUuid(id) ? await getAccessibleEntry(id, user) : null;
     if (!entry) throw new HttpError(404, "Eintrag nicht gefunden");
 
-    return Response.json(toEntryDto(entry), { headers: { "Cache-Control": "no-store" } });
+    return Response.json(toEntryDto(entry, (await getStudyPeriod()).start), { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return errorResponse(error);
   }

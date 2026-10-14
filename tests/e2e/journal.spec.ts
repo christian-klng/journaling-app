@@ -1,12 +1,16 @@
 import { expect, test } from "@playwright/test";
 import {
+  completeQuestionnaire,
   ensureTeam,
+  FLOW_GROUP,
+  FLOW_QUESTIONNAIRE,
   login,
   loginAsAdmin,
   logout,
   PASSWORD,
-  record,
   register,
+  setupStudy,
+  SMILEY_QUESTION,
   useFakeMicrophone,
 } from "./helpers";
 
@@ -22,13 +26,14 @@ test.beforeEach(async ({ page }) => {
   await useFakeMicrophone(page);
 });
 
-test("Admin legt ein Team an", async ({ page }) => {
+test("Admin legt ein Team und die Studie an", async ({ page }) => {
   await loginAsAdmin(page);
   await ensureTeam(page, TEAM);
+  await setupStudy(page);
 });
 
 test("Nutzer registriert sich mit einem Fantasienamen als Benutzernamen", async ({ page }) => {
-  userName = await register(page, TEAM);
+  userName = await register(page, TEAM, { group: FLOW_GROUP });
   expect(userName).toMatch(/^\p{Lu}\p{L}+ \p{Lu}\p{L}+( \d+)?$/u);
   await expect(page.getByText(`Dein Benutzername ist ${userName}`)).toBeVisible();
   await expect(page.getByRole("button", { name: `Menü für ${userName}` })).toBeVisible();
@@ -58,24 +63,21 @@ test("Die Registrierung nimmt nur vorgeschlagene Namen an", async ({ page }) => 
   await expect(field).not.toHaveValue("Max Mustermann");
 });
 
-test("Nutzer nimmt einen Eintrag auf und setzt ihn fort", async ({ page }) => {
+test("Nutzer füllt eine Abfrage aus und sieht seine Antworten", async ({ page }) => {
   // Groß- und Kleinschreibung spielt bei der Anmeldung keine Rolle
   await login(page, userName.toLowerCase());
   await expect(page).toHaveURL(/\/$/);
 
-  await record(page, "Neuer Eintrag");
-  const card = page.getByRole("link").filter({ hasText: TRANSCRIPT });
-  await expect(card).toHaveCount(1);
-
-  await card.click();
+  await completeQuestionnaire(page);
+  await page.getByRole("link", { name: new RegExp(`Woche 2 · ${FLOW_QUESTIONNAIRE}`) }).click();
   await expect(page).toHaveURL(/\/eintraege\/[0-9a-f-]{36}$/);
   entryUrl = page.url();
-  await expect(page.locator("audio")).toHaveCount(1);
 
-  await record(page, "Aufnahme fortsetzen");
-  await expect(page.getByRole("heading", { name: "2 Aufnahmen" })).toBeVisible();
-  await expect(page.locator("audio")).toHaveCount(2);
-  await expect(page.getByText(TRANSCRIPT)).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByText(SMILEY_QUESTION)).toBeVisible();
+  await expect(page.getByText("eher gut")).toBeVisible();
+  await expect(page.getByText("von 10")).toBeVisible();
+  await expect(page.locator("audio")).toHaveCount(1);
+  await expect(page.getByText(TRANSCRIPT)).toBeVisible({ timeout: 30_000 });
 });
 
 test("Audio lässt sich abspielen", async ({ page }) => {
@@ -123,7 +125,8 @@ test("Admin sieht die Person im Team und ihre Einträge", async ({ page }) => {
 
   await team.getByRole("link", { name: new RegExp(userName) }).click();
   await expect(page.getByRole("heading", { name: userName })).toBeVisible();
-  await expect(page.locator("audio")).toHaveCount(2);
+  await expect(page.getByRole("heading", { name: new RegExp(`Woche 2 · ${FLOW_QUESTIONNAIRE}`) })).toBeVisible();
+  await expect(page.locator("audio")).toHaveCount(1);
   await expect(page.getByText(TRANSCRIPT).first()).toBeVisible();
 });
 
@@ -140,7 +143,7 @@ test("Admin exportiert die Einträge als ZIP", async ({ page }) => {
   const names = zip.toString("latin1");
   const folder = `${TEAM}/${userName.replace(/ /g, "-")}`;
   expect(names).toContain(Buffer.from(`${folder}/`, "utf8").toString("latin1"));
-  for (const file of ["aufnahme-01.mp3", "aufnahme-01.txt", "aufnahme-02.mp3", "uebersicht.csv"]) {
+  for (const file of ["aufnahme-01.mp3", "aufnahme-01.txt", "uebersicht.csv"]) {
     expect(names).toContain(file);
   }
   expect(names).not.toContain("zusammenfassung.txt");

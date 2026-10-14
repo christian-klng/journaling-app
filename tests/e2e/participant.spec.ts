@@ -1,7 +1,18 @@
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { expect, test } from "@playwright/test";
 import postgres from "postgres";
-import { ensureGroup, login, loginAsAdmin, logout, randomCodeStem, record, register, useFakeMicrophone } from "./helpers";
+import {
+  completeQuestionnaire,
+  ensureGroup,
+  FLOW_GROUP,
+  login,
+  loginAsAdmin,
+  logout,
+  randomCodeStem,
+  register,
+  setupStudy,
+  useFakeMicrophone,
+} from "./helpers";
 
 const stem = randomCodeStem();
 let userName = "";
@@ -19,6 +30,7 @@ test("Admin legt die Gruppen an", async ({ page }) => {
   await loginAsAdmin(page);
   await ensureGroup(page, "Z");
   await ensureGroup(page, "Y");
+  await setupStudy(page);
 });
 
 test("Teilnehmende sehen bei der Registrierung nur die Buchstaben der Gruppen", async ({ page }) => {
@@ -78,11 +90,16 @@ test("Admin weist Gruppen gesammelt zu", async ({ page }) => {
 });
 
 test("Doppelte Codes fallen auf und lassen sich korrigieren", async ({ page }) => {
-  twinName = await register(page, undefined, { codeStem: stem });
-  await record(page, "Neuer Eintrag");
+  twinName = await register(page, undefined, { codeStem: stem, group: FLOW_GROUP });
+  await completeQuestionnaire(page);
   await logout(page);
 
+  // Gleicher Code und gleiche Gruppe lassen sich nicht unterscheiden
   await loginAsAdmin(page);
+  await page.getByRole("link", { name: new RegExp(userName) }).click();
+  await page.getByLabel("Gruppe", { exact: true }).selectOption({ label: `Gruppe ${FLOW_GROUP} – E2E Ablauf` });
+  await expect(page.getByText(`${stem}-${FLOW_GROUP}`)).toBeVisible();
+  await page.goto("/admin");
   const alert = page.getByRole("alert").filter({ hasText: "Doppelte Codes" });
   await expect(alert).toContainText(stem);
   await expect(alert).toContainText(userName);
@@ -94,7 +111,7 @@ test("Doppelte Codes fallen auf und lassen sich korrigieren", async ({ page }) =
   const corrected = randomCodeStem();
   await page.getByLabel("Persönlicher Code ohne Gruppe").fill(corrected.toLowerCase());
   await page.getByRole("button", { name: "Korrigieren" }).click();
-  await expect(page.getByText(`${corrected}-?`)).toBeVisible();
+  await expect(page.getByText(`${corrected}-${FLOW_GROUP}`)).toBeVisible();
 
   await page.goto("/admin");
   await expect(page.getByRole("alert").filter({ hasText: "Doppelte Codes" })).toHaveCount(0);

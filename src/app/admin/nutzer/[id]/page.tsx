@@ -9,9 +9,11 @@ import { ResetPassword } from "@/components/admin/reset-password";
 import { EntryView } from "@/components/entry-view";
 import { Button, Card } from "@/components/ui";
 import { assignStudyGroup, assignTeam, deleteParticipant, retryEntry } from "@/lib/admin/actions";
-import { getMember, listEntriesForAdmin, listTeams } from "@/lib/admin/queries";
+import { getMember, listTeams } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
-import { isUuid, toEntryDto } from "@/lib/entries";
+import { entryTitle } from "@/lib/entry-title";
+import { isUuid, listEntries, toEntryDto } from "@/lib/entries";
+import { getStudyPeriod } from "@/lib/settings";
 import { formatDate, formatShortDate } from "@/lib/format";
 import { formatCode } from "@/lib/study/code";
 import { listStudyGroups } from "@/lib/study/queries";
@@ -24,10 +26,11 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
   const member = isUuid(id) ? await getMember(id) : null;
   if (!member) notFound();
 
-  const [teams, groups, entries] = await Promise.all([
+  const [teams, groups, entries, period] = await Promise.all([
     listTeams(),
     listStudyGroups(),
-    listEntriesForAdmin(member.id),
+    listEntries(member.id),
+    getStudyPeriod(),
   ]);
 
   return (
@@ -109,7 +112,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
       {entries.length === 0 && <p className="text-muted">Diese Person hat noch nichts aufgenommen.</p>}
 
       {entries.map((entry, index) => {
-        const dto = toEntryDto(entry);
+        const dto = toEntryDto(entry, period.start);
         const stuck = !dto.pending && entry.recordings.some((r) => r.status === "failed");
         return (
           <details key={entry.id} open={index === 0} className="group space-y-4">
@@ -117,9 +120,16 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
               <span aria-hidden className="text-muted transition-transform group-open:rotate-90">
                 ›
               </span>
-              <h3 className="flex-1 font-semibold">{formatDate(entry.createdAt)}</h3>
-              <span className="text-sm text-muted">
-                {entry.recordings.length === 1 ? "1 Aufnahme" : `${entry.recordings.length} Aufnahmen`}
+              <span className="min-w-0 flex-1 py-1">
+                <h3 className="font-semibold">{entryTitle(dto)}</h3>
+                <span className="block text-sm text-muted">
+                  {formatDate(entry.createdAt)}
+                  {dto.groupLetter && ` · Gruppe ${dto.groupLetter}`}
+                  {dto.late && " · nachgeholt"}
+                </span>
+              </span>
+              <span className="shrink-0 text-sm text-muted">
+                {entry.questionnaireId && !entry.completedAt ? "begonnen" : ""}
               </span>
             </summary>
             <div className="space-y-4 pt-4">

@@ -1,7 +1,7 @@
 import "server-only";
-import { asc, count, desc, eq, max, sql } from "drizzle-orm";
+import { asc, count, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { entries, recordings, studyGroups, teams, users } from "@/lib/db/schema";
+import { entries, questionnaires, recordings, studyGroups, teams, users } from "@/lib/db/schema";
 
 const memberColumns = {
   id: users.id,
@@ -125,10 +125,44 @@ export async function getExportData(scope: ExportScope) {
 
 export type ExportRow = Awaited<ReturnType<typeof getExportData>>[number];
 
-export async function listEntriesForAdmin(userId: string) {
-  return db.query.entries.findMany({
-    where: eq(entries.userId, userId),
-    orderBy: desc(entries.createdAt),
-    with: { recordings: { orderBy: asc(recordings.position) } },
-  });
+/** Alles für die Teilnahme-Tabelle: Personen, aktive Abfragen und abgegebene Einträge. */
+export async function getParticipationData() {
+  const [people, activeQuestionnaires, rows] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        codeStem: users.codeStem,
+        studyGroupId: users.studyGroupId,
+        groupLetter: studyGroups.letter,
+        teamName: teams.name,
+      })
+      .from(users)
+      .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
+      .leftJoin(teams, eq(teams.id, users.teamId))
+      .where(eq(users.role, "user"))
+      .orderBy(asc(teams.name), asc(users.displayName)),
+    db
+      .select({
+        id: questionnaires.id,
+        groupId: questionnaires.groupId,
+        name: questionnaires.name,
+        opensOn: questionnaires.opensOn,
+        closesOn: questionnaires.closesOn,
+        position: questionnaires.position,
+      })
+      .from(questionnaires)
+      .where(isNull(questionnaires.archivedAt)),
+    db
+      .select({
+        userId: entries.userId,
+        questionnaireId: entries.questionnaireId,
+        weekStart: entries.weekStart,
+        completedAt: entries.completedAt,
+        late: entries.late,
+      })
+      .from(entries)
+      .where(isNotNull(entries.questionnaireId)),
+  ]);
+  return { people, questionnaires: activeQuestionnaires, entries: rows };
 }

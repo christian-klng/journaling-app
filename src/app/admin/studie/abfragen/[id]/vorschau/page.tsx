@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MicIcon } from "@/components/recording-modal";
+import { MicIcon } from "@/components/study/mic-icon";
 import { NumberScale, SmileyScale } from "@/components/study/scales";
 import { buttonClass, Card, Notice } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth/guards";
