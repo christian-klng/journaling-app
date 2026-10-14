@@ -12,6 +12,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         nav={[
           { href: "/admin", label: "Übersicht" },
           { href: "/admin/teams", label: "Teams" },
+          { href: "/admin/studie", label: "Studie" },
           { href: "/admin/einstellungen", label: "Einstellungen" },
         ]}
       />

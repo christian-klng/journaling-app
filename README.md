@@ -30,6 +30,14 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   Abkürzungen, die das Modell richtig schreiben soll.
 - Passwort zurücksetzen: Ein Einmal-Passwort wird einmalig angezeigt und gilt 72 Stunden. Die
   Person muss danach ein eigenes Passwort vergeben.
+- Studie einrichten (unter „Studie"): Studienzeitraum, Gruppen (Buchstabe für den persönlichen Code
+  und interne Bezeichnung) und pro Gruppe Abfragen mit Zeitfenster, Einleitung und Elementen
+  (Smiley-Skala 1–5, Skala 0–10, Audio-Frage), jeweils als Pflicht oder optional. Die Fragen stehen
+  in der Datenbank, nicht im Code, damit das öffentliche Repository sie nicht verrät.
+- Abfragen und Elemente werden nicht gelöscht, sondern archiviert. Textkorrekturen sind jederzeit
+  möglich; gegebene Antworten behalten den Text, den die Person gesehen hat.
+- Vorschau einer Abfrage aus Sicht der Teilnehmenden, Kopieren in eine andere Gruppe und Import
+  bzw. Export der ganzen Konfiguration als JSON.
 - Weitere Admins anlegen (unter „Teams"). Admin-Konten sind von denen der Teilnehmenden getrennt
   und bekommen ebenfalls einen Fantasienamen und ein Einmal-Passwort.
 

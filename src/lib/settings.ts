@@ -23,3 +23,12 @@ export async function getTranscriptionPrompt() {
   const value = await getSetting(TRANSCRIPTION_PROMPT_KEY);
   return value?.trim() || null;
 }
+
+export const STUDY_START_KEY = "study_start";
+export const STUDY_END_KEY = "study_end";
+
+/** Studienzeitraum als ISO-Daten (YYYY-MM-DD), solange noch nichts eingetragen ist null. */
+export async function getStudyPeriod() {
+  const [start, end] = await Promise.all([getSetting(STUDY_START_KEY), getSetting(STUDY_END_KEY)]);
+  return { start: start || null, end: end || null };
+}

@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  smallint,
   pgEnum,
   pgTable,
   text,
@@ -111,6 +112,62 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Studienablauf: Gruppen mit ihren Abfragen (z. B. Check-In und Check-Out). Alles wird im
+// Admin-Bereich gepflegt und steht bewusst nicht im Code, damit das öffentliche Repository die
+// Fragen der Gruppen nicht verrät.
+
+export const itemTypeEnum = pgEnum("item_type", ["smiley", "scale", "audio"]);
+
+export const studyGroups = pgTable("study_groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  // Teil des persönlichen Codes, z. B. "A"
+  letter: text("letter").notNull().unique(),
+  // Nur für Admins sichtbar, z. B. "Guided Reflection"
+  label: text("label").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const questionnaires = pgTable(
+  "questionnaires",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => studyGroups.id, { onDelete: "restrict" }),
+    name: text("name").notNull(),
+    intro: text("intro").notNull().default(""),
+    // Zeitfenster innerhalb einer Woche, 1 = Montag … 7 = Sonntag
+    opensOn: smallint("opens_on").notNull(),
+    closesOn: smallint("closes_on").notNull(),
+    position: integer("position").notNull(),
+    // Archiviert statt gelöscht, damit gegebene Antworten ihre Abfrage behalten
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("questionnaires_group_idx").on(t.groupId, t.position)],
+);
+
+export const questionnaireItems = pgTable(
+  "questionnaire_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    questionnaireId: uuid("questionnaire_id")
+      .notNull()
+      .references(() => questionnaires.id, { onDelete: "cascade" }),
+    // Lässt sich nach dem Anlegen nicht mehr ändern, sonst passten alte Antworten nicht mehr
+    type: itemTypeEnum("type").notNull(),
+    text: text("text").notNull(),
+    required: boolean("required").notNull().default(true),
+    // Beschriftung der Enden, nur bei der Skala 0–10
+    minLabel: text("min_label").notNull().default(""),
+    maxLabel: text("max_label").notNull().default(""),
+    position: integer("position").notNull(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("questionnaire_items_questionnaire_idx").on(t.questionnaireId, t.position)],
+);
+
 export const teamsRelations = relations(teams, ({ many }) => ({ users: many(users) }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -127,7 +184,27 @@ export const recordingsRelations = relations(recordings, ({ one }) => ({
   entry: one(entries, { fields: [recordings.entryId], references: [entries.id] }),
 }));
 
+export const studyGroupsRelations = relations(studyGroups, ({ many }) => ({
+  questionnaires: many(questionnaires),
+}));
+
+export const questionnairesRelations = relations(questionnaires, ({ one, many }) => ({
+  group: one(studyGroups, { fields: [questionnaires.groupId], references: [studyGroups.id] }),
+  items: many(questionnaireItems),
+}));
+
+export const questionnaireItemsRelations = relations(questionnaireItems, ({ one }) => ({
+  questionnaire: one(questionnaires, {
+    fields: [questionnaireItems.questionnaireId],
+    references: [questionnaires.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type Team = typeof teams.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type Recording = typeof recordings.$inferSelect;
+export type StudyGroup = typeof studyGroups.$inferSelect;
+export type Questionnaire = typeof questionnaires.$inferSelect;
+export type QuestionnaireItem = typeof questionnaireItems.$inferSelect;
+export type ItemType = (typeof itemTypeEnum.enumValues)[number];
