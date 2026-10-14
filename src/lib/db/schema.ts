@@ -37,12 +37,16 @@ export const users = pgTable(
     loginName: text("login_name").notNull().unique(),
     role: roleEnum("role").notNull().default("user"),
     teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    // Persönlicher Code ohne Gruppenbuchstaben, z. B. "KA-03-BE". Nur bei Teilnehmenden.
+    codeStem: text("code_stem"),
+    // Setzen Teilnehmende einmal selbst, danach ändern ihn nur Admins
+    studyGroupId: uuid("study_group_id").references(() => studyGroups.id, { onDelete: "restrict" }),
     mustChangePassword: boolean("must_change_password").notNull().default(false),
     tempPasswordExpiresAt: timestamp("temp_password_expires_at", { withTimezone: true }),
     consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("users_team_idx").on(t.teamId)],
+  (t) => [index("users_team_idx").on(t.teamId), index("users_code_stem_idx").on(t.codeStem)],
 );
 
 export const sessions = pgTable(
@@ -172,6 +176,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({ users: many(user
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   team: one(teams, { fields: [users.teamId], references: [teams.id] }),
+  studyGroup: one(studyGroups, { fields: [users.studyGroupId], references: [studyGroups.id] }),
   entries: many(entries),
 }));
 

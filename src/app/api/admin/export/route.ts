@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/entries";
 import { entryFolder, recordingBaseName, toCsv } from "@/lib/export";
 import { formatIsoDate, formatShortDate, formatTime } from "@/lib/format";
 import { getObjectStream } from "@/lib/storage";
+import { formatCode } from "@/lib/study/code";
 
 const EXTENSIONS: Record<string, string> = {
   "audio/webm": "webm",
@@ -68,6 +69,8 @@ export async function GET(request: Request) {
         csvRows.push([
           row.teamName ?? "Ohne Team",
           row.displayName,
+          formatCode(row.codeStem, row.groupLetter),
+          row.groupLetter,
           entryNumber,
           formatShortDate(row.entry.createdAt),
           formatTime(row.entry.createdAt),
@@ -80,7 +83,7 @@ export async function GET(request: Request) {
       await add(
         toCsv(
           [
-            "Team", "Fantasiename", "Eintrag", "Datum", "Uhrzeit", "Aufnahmen",
+            "Team", "Fantasiename", "Code", "Gruppe", "Eintrag", "Datum", "Uhrzeit", "Aufnahmen",
             "Dauer (Sekunden)", "Ordner",
           ],
           csvRows,

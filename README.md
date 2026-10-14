@@ -14,6 +14,10 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   zugleich der Benutzername ist. Die App speichert keine E-Mail-Adressen und keine echten Namen.
 - Bei der Anmeldung spielen Groß- und Kleinschreibung keine Rolle, Umlaute dürfen als ae, oe, ue
   geschrieben werden.
+- Bei der Registrierung bildet jede Person ihren persönlichen Code (z. B. KA-03-BE-A): erste zwei
+  Buchstaben des Vornamens der Mutter, Geburtsmonat, erste zwei Buchstaben des Geburtsortes. Der
+  letzte Teil ist die Gruppe. Sie lässt sich bei der Registrierung oder später unter „Code und
+  Gruppe" genau einmal selbst eintragen; solange sie fehlt, blinkt ein roter Punkt.
 - „Neuer Eintrag" öffnet ein Modal, die Aufnahme startet sofort.
 - Nach der Aufnahme erscheint das Transkript.
 - „Aufnahme fortsetzen" hängt weitere Aufnahmen an einen Eintrag.
@@ -25,6 +29,9 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Startseite mit allen Teams und ihren Mitgliedern, dazu die Gruppe „Ohne Team".
 - Teams anlegen, umbenennen, löschen. Personen einem Team zuordnen.
 - Einträge jeder Person lesen und anhören.
+- Persönlicher Code und Gruppe in der Übersicht. Doppelte Codes werden angezeigt. Gruppen lassen
+  sich auf der Seite der Person oder gesammelt über eine Liste von Codes zuweisen, Codes korrigieren.
+- Konten von Teilnehmenden löschen, mit allen Einträgen und Audiodateien.
 - ZIP-Export für alles, ein Team oder eine Person.
 - Hinweistext für die Transkription pflegen (unter „Einstellungen"): Namen, Fachbegriffe und
   Abkürzungen, die das Modell richtig schreiben soll.
@@ -182,8 +189,10 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
   Fantasienamen, den die App vorschlägt; eigene Namen lassen sich nicht eintragen.
 - Audio und Texte liegen in der EU, auf dem Server und im Object Storage bei Hetzner. Cortecs leitet
   zur Transkription nur an Anbieter in der EU weiter.
-- Nutzer können Einträge derzeit nicht selbst löschen. Löschwünsche müssen über die Datenbank
-  erfüllt werden.
+- Der persönliche Code verknüpft Einträge mit späteren Befragungen, ohne Namen zu erfassen. Die
+  App kennt nur Fantasiename, Code und Gruppe.
+- Nutzer können Einträge nicht selbst löschen. Auf Wunsch löscht ein Admin das ganze Konto samt
+  Einträgen und Audiodateien.
 
 ## Bekannte Grenzen
 

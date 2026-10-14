@@ -49,6 +49,9 @@ test("Die Registrierung nimmt nur vorgeschlagene Namen an", async ({ page }) => 
   });
   await page.getByLabel("Passwort", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Passwort wiederholen").fill(PASSWORD);
+  await page.getByLabel("Vornamens deiner Mutter").fill("KA");
+  await page.getByLabel("Dein Geburtsmonat").selectOption("03");
+  await page.getByLabel("Geburtsortes").fill("BE");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
   await expect(page.getByText("Bitte nimm den vorgeschlagenen Namen.")).toBeVisible();

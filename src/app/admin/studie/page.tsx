@@ -48,7 +48,10 @@ export default async function StudyPage() {
           <Card key={group.id} className="space-y-4">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold">Gruppe {group.letter}</h2>
-              {group.questionnaires.length === 0 && (
+              <span className="ml-auto text-sm text-muted">
+                {group.memberCount === 1 ? "1 Person" : `${group.memberCount} Personen`}
+              </span>
+              {group.questionnaires.length === 0 && group.memberCount === 0 && (
                 <ConfirmForm action={deleteGroup.bind(null, group.id)} message={`Gruppe ${group.letter} löschen?`}>
                   <Button type="submit" variant="ghost" size="sm">
                     Gruppe löschen

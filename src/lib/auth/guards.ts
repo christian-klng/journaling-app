@@ -10,6 +10,13 @@ export async function requireUser() {
   return user;
 }
 
+/** Für die Seiten der Teilnehmenden: ohne persönlichen Code geht es zuerst zur Profilseite. */
+export async function requireParticipant() {
+  const user = await requireUser();
+  if (user.role === "user" && !user.codeStem) redirect("/profil");
+  return user;
+}
+
 /** Für Admin-Seiten: normale Nutzer landen auf ihrer Startseite. */
 export async function requireAdmin() {
   const user = await requireUser();

@@ -3,14 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntryView } from "@/components/entry-view";
 import { RecordingModal } from "@/components/recording-modal";
-import { requireUser } from "@/lib/auth/guards";
+import { requireParticipant } from "@/lib/auth/guards";
 import { getAccessibleEntry, isUuid, toEntryDto } from "@/lib/entries";
 import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Eintrag" };
 
 export default async function EntryPage({ params }: PageProps<"/eintraege/[id]">) {
-  const user = await requireUser();
+  const user = await requireParticipant();
   const { id } = await params;
   const entry = isUuid(id) ? await getAccessibleEntry(id, user) : null;
   if (!entry || entry.userId !== user.id) notFound();

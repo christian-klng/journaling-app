@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "@/lib/db";
-import { teams, users } from "@/lib/db/schema";
+import { studyGroups, teams, users } from "@/lib/db/schema";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
+import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
 import { isNameTaken, proposeName } from "./accounts";
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 import { clearAttempts, recordFailedAttempt, tooManyAttempts } from "./rate-limit";
@@ -31,6 +32,7 @@ const RegisterSchema = z.object({
   password,
   passwordRepeat: z.string(),
   teamId: z.union([z.literal(""), z.uuid()]),
+  groupId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
 });
 
@@ -38,7 +40,13 @@ export async function register(_state: FormState, formData: FormData): Promise<F
   const fields = {
     username: String(formData.get("username") ?? ""),
     teamId: String(formData.get("teamId") ?? ""),
+    groupId: String(formData.get("groupId") ?? ""),
+    mother: String(formData.get("mother") ?? ""),
+    month: String(formData.get("month") ?? ""),
+    birthplace: String(formData.get("birthplace") ?? ""),
   };
+  const code = CodePartsSchema.safeParse(fields);
+  if (!code.success) return { error: firstError(code.error), fields };
   const parsed = RegisterSchema.safeParse({
     ...fields,
     password: formData.get("password"),
@@ -74,6 +82,14 @@ export async function register(_state: FormState, formData: FormData): Promise<F
     teamId = team.id;
   }
 
+  // Die Gruppe ist bei der Registrierung oft noch nicht bekannt und wird dann später nachgetragen
+  let studyGroupId: string | null = null;
+  if (data.groupId) {
+    const [group] = await db.select({ id: studyGroups.id }).from(studyGroups).where(eq(studyGroups.id, data.groupId));
+    if (!group) return { error: "Diese Gruppe gibt es nicht. Bitte wähle eine andere.", fields };
+    studyGroupId = group.id;
+  }
+
   const [user] = await db
     .insert(users)
     .values({
@@ -82,6 +98,8 @@ export async function register(_state: FormState, formData: FormData): Promise<F
       passwordHash: await hashPassword(data.password),
       role: "user",
       teamId,
+      codeStem: codeStemFromParts(code.data),
+      studyGroupId,
       consentAt: new Date(),
     })
     .onConflictDoNothing()

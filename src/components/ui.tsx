@@ -85,3 +85,13 @@ export function Spinner({ className = "" }: { className?: string }) {
     />
   );
 }
+
+/** Roter, blinkender Punkt für etwas, das noch fehlt. Ohne Animation bei reduzierter Bewegung. */
+export function AttentionDot({ className = "" }: { className?: string }) {
+  return (
+    <span aria-hidden className={`relative inline-flex size-2.5 shrink-0 ${className}`}>
+      <span className="absolute inline-flex size-full rounded-full bg-record opacity-75 motion-safe:animate-ping" />
+      <span className="relative inline-flex size-2.5 rounded-full bg-record" />
+    </span>
+  );
+}

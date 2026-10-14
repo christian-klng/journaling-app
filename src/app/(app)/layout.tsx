@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <>
-      <AppHeader displayName={user.displayName} home="/" />
+      <AppHeader displayName={user.displayName} home="/" groupMissing={!user.studyGroupId} />
       <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">{children}</main>
     </>
   );

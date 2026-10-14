@@ -1,13 +1,15 @@
 import "server-only";
 import { asc, count, desc, eq, max, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { entries, recordings, teams, users } from "@/lib/db/schema";
+import { entries, recordings, studyGroups, teams, users } from "@/lib/db/schema";
 
 const memberColumns = {
   id: users.id,
   displayName: users.displayName,
   role: users.role,
   teamId: users.teamId,
+  codeStem: users.codeStem,
+  studyGroupId: users.studyGroupId,
   createdAt: users.createdAt,
 };
 
@@ -15,6 +17,8 @@ export type Member = {
   id: string;
   displayName: string;
   teamId: string | null;
+  codeStem: string | null;
+  groupLetter: string | null;
   entryCount: number;
   lastEntryAt: Date | null;
 };
@@ -27,13 +31,16 @@ export async function getOverview() {
       id: users.id,
       displayName: users.displayName,
       teamId: users.teamId,
+      codeStem: users.codeStem,
+      groupLetter: studyGroups.letter,
       entryCount: count(entries.id),
       lastEntryAt: max(entries.createdAt),
     })
     .from(users)
     .leftJoin(entries, eq(entries.userId, users.id))
+    .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
     .where(eq(users.role, "user"))
-    .groupBy(users.id)
+    .groupBy(users.id, studyGroups.letter)
     .orderBy(asc(users.displayName));
 
   return {
@@ -42,6 +49,7 @@ export async function getOverview() {
       members: members.filter((m) => m.teamId === team.id),
     })),
     withoutTeam: members.filter((m) => m.teamId === null),
+    members,
     totalEntries: members.reduce((sum, m) => sum + m.entryCount, 0),
   };
 }
@@ -61,8 +69,9 @@ export function listAdmins() {
 
 export async function getMember(userId: string) {
   const [member] = await db
-    .select(memberColumns)
+    .select({ ...memberColumns, groupLetter: studyGroups.letter })
     .from(users)
+    .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
     .where(eq(users.id, userId));
   return member ?? null;
 }
@@ -83,12 +92,15 @@ export async function getExportData(scope: ExportScope) {
     .select({
       userId: users.id,
       displayName: users.displayName,
+      codeStem: users.codeStem,
+      groupLetter: studyGroups.letter,
       teamName: teams.name,
       entry: entries,
     })
     .from(entries)
     .innerJoin(users, eq(users.id, entries.userId))
     .leftJoin(teams, eq(teams.id, users.teamId))
+    .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
     .where(where)
     .orderBy(asc(teams.name), asc(users.displayName), asc(entries.createdAt));
 

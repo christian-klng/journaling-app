@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loginAsAdmin, register } from "./helpers";
+import { ensureGroup, loginAsAdmin, register } from "./helpers";
 
 // Eigene Buchstaben, damit die Tests keine echten Gruppen A und B anfassen
 const GROUP = "Z";
@@ -16,14 +16,6 @@ test.beforeEach(async ({ page }) => {
 
 const groupCard = (page: Page, letter: string) =>
   page.locator("div.rounded-2xl").filter({ has: page.getByRole("heading", { name: `Gruppe ${letter}`, exact: true }) });
-
-async function ensureGroup(page: Page, letter: string) {
-  if ((await groupCard(page, letter).count()) > 0) return;
-  await page.getByLabel("Buchstabe der neuen Gruppe").fill(letter.toLowerCase());
-  await page.getByLabel("Interne Bezeichnung der neuen Gruppe").fill(`E2E Gruppe ${letter}`);
-  await page.getByRole("button", { name: "Gruppe anlegen" }).click();
-  await expect(groupCard(page, letter)).toBeVisible();
-}
 
 test("Admin legt Zeitraum, Gruppen und eine Abfrage an", async ({ page }) => {
   await loginAsAdmin(page);

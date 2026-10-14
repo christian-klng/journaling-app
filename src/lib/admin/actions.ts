@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { and, eq, ne } from "drizzle-orm";
 import * as z from "zod";
@@ -9,10 +10,12 @@ import { createAdminAccount } from "@/lib/auth/accounts";
 import { generateTempPassword, hashPassword, TEMP_PASSWORD_TTL_MS } from "@/lib/auth/password";
 import { destroyAllSessions } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { recordings, teams, users } from "@/lib/db/schema";
+import { recordings, studyGroups, teams, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { processRecording } from "@/lib/pipeline";
 import { setSetting, TRANSCRIPTION_PROMPT_KEY, TRANSCRIPTION_PROMPT_MAX_LENGTH } from "@/lib/settings";
+import { deleteByPrefix } from "@/lib/storage";
+import { parseCodeStem, parseGroupAssignments } from "@/lib/study/code";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
 
@@ -73,6 +76,90 @@ export async function assignTeam(userId: string, formData: FormData) {
     .set({ teamId: teamId || null })
     .where(and(eq(users.id, userId), eq(users.role, "user")));
   revalidatePath("/admin", "layout");
+}
+
+/** Admins können die Gruppe jederzeit setzen oder entfernen, Teilnehmende nur einmal selbst. */
+export async function assignStudyGroup(userId: string, formData: FormData) {
+  await assertAdmin();
+  const groupId = String(formData.get("groupId") ?? "");
+  if (groupId && !isUuid(groupId)) return;
+
+  await db
+    .update(users)
+    .set({ studyGroupId: groupId || null })
+    .where(and(eq(users.id, userId), eq(users.role, "user")));
+  revalidatePath("/admin", "layout");
+}
+
+/** Korrigiert einen falsch eingegebenen Code, z. B. "KA-03-BE". */
+export async function updateCodeStem(userId: string, _state: ActionState, formData: FormData): Promise<ActionState> {
+  await assertAdmin();
+  const stem = parseCodeStem(String(formData.get("codeStem") ?? ""));
+  if (!stem) return { error: "Der Code muss so aussehen: KA-03-BE (ohne Gruppe)." };
+
+  await db.update(users).set({ codeStem: stem }).where(and(eq(users.id, userId), eq(users.role, "user")));
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+/**
+ * Löscht ein Konto der Teilnehmenden endgültig, mit allen Einträgen und Aufnahmen. Erst die
+ * Audiodateien, dann die Datenbank: Scheitert der Speicher, bleibt das Konto vollständig erhalten.
+ */
+export async function deleteParticipant(userId: string) {
+  await assertAdmin();
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.id, userId), eq(users.role, "user")));
+  if (!user) return;
+
+  await deleteByPrefix(`users/${user.id}/`);
+  await db.delete(users).where(eq(users.id, user.id));
+  revalidatePath("/admin", "layout");
+  redirect("/admin?geloescht=1");
+}
+
+export type BulkState = (ActionState & { report?: string[] }) | undefined;
+
+/**
+ * Weist Gruppen über den Code zu, eine Zeile pro Person ("KA-03-BE A"). Zeilen, die nicht
+ * eindeutig zu genau einer Person passen, bleiben unverändert und erscheinen im Bericht.
+ */
+export async function assignGroupsInBulk(_state: BulkState, formData: FormData): Promise<BulkState> {
+  await assertAdmin();
+  const { assignments, invalid } = parseGroupAssignments(String(formData.get("lines") ?? ""));
+  if (assignments.length === 0 && invalid.length === 0) return { error: "Bitte trage mindestens eine Zeile ein." };
+
+  const [groups, people] = await Promise.all([
+    db.select({ id: studyGroups.id, letter: studyGroups.letter }).from(studyGroups),
+    db
+      .select({ id: users.id, displayName: users.displayName, codeStem: users.codeStem, studyGroupId: users.studyGroupId })
+      .from(users)
+      .where(eq(users.role, "user")),
+  ]);
+  const report = invalid.map((i) => `Zeile ${i.line}: „${i.text}“ ist kein gültiger Code mit Gruppe.`);
+  let changed = 0;
+
+  for (const { line, stem, letter } of assignments) {
+    const group = groups.find((g) => g.letter === letter);
+    const matches = people.filter((p) => p.codeStem === stem);
+    if (!group) report.push(`Zeile ${line}: Gruppe ${letter} gibt es nicht.`);
+    else if (matches.length === 0) report.push(`Zeile ${line}: Kein Konto mit dem Code ${stem}.`);
+    else if (matches.length > 1) {
+      const names = matches.map((m) => m.displayName).join(", ");
+      report.push(`Zeile ${line}: ${stem} gibt es mehrfach (${names}). Bitte auf der Seite der Person zuweisen.`);
+    } else if (matches[0].studyGroupId !== group.id) {
+      await db.update(users).set({ studyGroupId: group.id }).where(eq(users.id, matches[0].id));
+      changed++;
+    }
+  }
+
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    report: [`${changed === 1 ? "1 Person" : `${changed} Personen`} zugewiesen.`, ...report],
+  };
 }
 
 /**

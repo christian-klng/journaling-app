@@ -1,15 +1,18 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { CodeFields } from "@/components/study/code-fields";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
 import { register, suggestName, type FormState } from "@/lib/auth/actions";
 
 export function RegisterForm({
   proposedName,
   teams,
+  groups,
 }: {
   proposedName: string;
   teams: { id: string; name: string }[];
+  groups: { id: string; letter: string }[];
 }) {
   const [name, setName] = useState(proposedName);
   const [suggesting, startSuggesting] = useTransition();
@@ -75,6 +78,22 @@ export function RegisterForm({
           ))}
         </select>
       </Field>
+      <CodeFields defaults={state?.fields} />
+      {groups.length > 0 && (
+        <Field
+          label="Deine Gruppe"
+          hint="Falls du sie noch nicht kennst, trägst du sie später ein. Ändern kann sie danach nur die Studienleitung."
+        >
+          <select name="groupId" defaultValue={state?.fields?.groupId ?? ""} className={inputClass}>
+            <option value="">Noch nicht bekannt</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                Gruppe {group.letter}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="consent" required className="mt-0.5 size-5 accent-accent" />
         <span>

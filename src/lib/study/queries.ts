@@ -1,12 +1,16 @@
 import "server-only";
-import { asc, eq, isNull } from "drizzle-orm";
+import { asc, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { questionnaireItems, questionnaires, studyGroups } from "@/lib/db/schema";
+import { questionnaireItems, questionnaires, studyGroups, users } from "@/lib/db/schema";
 import { getStudyPeriod } from "@/lib/settings";
 import { STUDY_FILE_FORMAT, type StudyFile } from "./config";
 
-/** Alle Gruppen mit ihren Abfragen und der Zahl der aktiven Elemente, für die Übersicht. */
+/** Alle Gruppen mit ihren Abfragen, der Zahl der aktiven Elemente und der Personen. */
 export async function getStudyOverview() {
+  const memberCounts = await db
+    .select({ groupId: users.studyGroupId, members: count() })
+    .from(users)
+    .groupBy(users.studyGroupId);
   const groups = await db.query.studyGroups.findMany({
     orderBy: asc(studyGroups.letter),
     with: {
@@ -18,6 +22,7 @@ export async function getStudyOverview() {
   });
   return groups.map(({ questionnaires: list, ...group }) => ({
     ...group,
+    memberCount: memberCounts.find((m) => m.groupId === group.id)?.members ?? 0,
     questionnaires: list.map(({ items, ...q }) => ({ ...q, itemCount: items.length })),
   }));
 }

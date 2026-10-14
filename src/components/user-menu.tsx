@@ -3,8 +3,18 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/lib/auth/actions";
+import { AttentionDot } from "./ui";
 
-export function UserMenu({ displayName }: { displayName: string }) {
+export function UserMenu({
+  displayName,
+  profile = false,
+  groupMissing = false,
+}: {
+  displayName: string;
+  /** Link zu Code und Gruppe, nur für Teilnehmende */
+  profile?: boolean;
+  groupMissing?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -30,15 +40,16 @@ export function UserMenu({ displayName }: { displayName: string }) {
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={`Menü für ${displayName}`}
+        aria-label={`Menü für ${displayName}${groupMissing ? ", Gruppe fehlt" : ""}`}
         onClick={() => setOpen((value) => !value)}
         className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-medium hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
       >
         <span
           aria-hidden
-          className="flex size-7 items-center justify-center rounded-full bg-accent-soft text-accent"
+          className="relative flex size-7 items-center justify-center rounded-full bg-accent-soft text-accent"
         >
           {displayName[0]}
+          {groupMissing && <AttentionDot className="absolute -top-0.5 -right-0.5" />}
         </span>
         <span className="hidden max-w-40 truncate sm:inline">{displayName}</span>
       </button>
@@ -52,6 +63,17 @@ export function UserMenu({ displayName }: { displayName: string }) {
             <span className="block text-muted">Angemeldet als</span>
             <span className="font-medium">{displayName}</span>
           </p>
+          {profile && (
+            <Link
+              role="menuitem"
+              href="/profil"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-accent-soft"
+            >
+              Code und Gruppe
+              {groupMissing && <AttentionDot />}
+            </Link>
+          )}
           <Link
             role="menuitem"
             href="/passwort-aendern"

@@ -2,15 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AutoSubmitSelect } from "@/components/admin/auto-submit-select";
+import { ConfirmForm } from "@/components/admin/confirm-form";
+import { CodeStemForm } from "@/components/admin/participant-forms";
 import { ExportLink } from "@/components/admin/export-link";
 import { ResetPassword } from "@/components/admin/reset-password";
 import { EntryView } from "@/components/entry-view";
 import { Button, Card } from "@/components/ui";
-import { assignTeam, retryEntry } from "@/lib/admin/actions";
+import { assignStudyGroup, assignTeam, deleteParticipant, retryEntry } from "@/lib/admin/actions";
 import { getMember, listEntriesForAdmin, listTeams } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 import { isUuid, toEntryDto } from "@/lib/entries";
 import { formatDate, formatShortDate } from "@/lib/format";
+import { formatCode } from "@/lib/study/code";
+import { listStudyGroups } from "@/lib/study/queries";
 
 export const metadata: Metadata = { title: "Person" };
 
@@ -20,7 +24,11 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
   const member = isUuid(id) ? await getMember(id) : null;
   if (!member) notFound();
 
-  const [teams, entries] = await Promise.all([listTeams(), listEntriesForAdmin(member.id)]);
+  const [teams, groups, entries] = await Promise.all([
+    listTeams(),
+    listStudyGroups(),
+    listEntriesForAdmin(member.id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -30,6 +38,12 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
         </Link>
         <h1 className="text-xl font-semibold">{member.displayName}</h1>
         <p className="text-sm text-muted">
+          {member.role === "user" && (
+            <>
+              <span className="font-mono">{formatCode(member.codeStem, member.groupLetter) ?? "kein Code"}</span>
+              {" · "}
+            </>
+          )}
           Dabei seit {formatShortDate(member.createdAt)}
           {member.role === "admin" && " · Admin"}
         </p>
@@ -50,7 +64,39 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
             />
           </form>
         )}
-        {member.id !== me.id && <ResetPassword userId={member.id} displayName={member.displayName} />}
+        {member.role === "user" && (
+          <form action={assignStudyGroup.bind(null, member.id)} className="space-y-1.5">
+            <span className="text-sm font-medium">Gruppe</span>
+            <AutoSubmitSelect
+              name="groupId"
+              label="Gruppe"
+              defaultValue={member.studyGroupId ?? ""}
+              options={[
+                { value: "", label: "Keine Gruppe" },
+                ...groups.map((group) => ({
+                  value: group.id,
+                  label: `Gruppe ${group.letter}${group.label ? ` – ${group.label}` : ""}`,
+                })),
+              ]}
+            />
+          </form>
+        )}
+        {member.role === "user" && <CodeStemForm userId={member.id} codeStem={member.codeStem} />}
+        {member.id !== me.id && (
+          <div className="flex flex-wrap gap-2">
+            <ResetPassword userId={member.id} displayName={member.displayName} />
+            {member.role === "user" && (
+              <ConfirmForm
+                action={deleteParticipant.bind(null, member.id)}
+                message={`Konto ${member.displayName} mit ${entries.length === 1 ? "1 Eintrag" : `${entries.length} Einträgen`} und allen Aufnahmen endgültig löschen? Das lässt sich nicht rückgängig machen.`}
+              >
+                <Button type="submit" variant="danger" size="sm">
+                  Konto löschen
+                </Button>
+              </ConfirmForm>
+            )}
+          </div>
+        )}
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

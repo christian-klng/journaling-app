@@ -7,13 +7,29 @@ export const ADMIN_LOGIN_NAME = "e2e admin";
 
 if (!PASSWORD) throw new Error("E2E_PASSWORD fehlt. Bitte in .env setzen, siehe .env.example.");
 
+const randomLetters = () =>
+  Array.from({ length: 2 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+
+/** Zufälliger Code-Anfang wie "QX-05-HB", damit Testläufe sich nicht als Doppelte melden. */
+export const randomCodeStem = () =>
+  `${randomLetters()}-${String(1 + Math.floor(Math.random() * 12)).padStart(2, "0")}-${randomLetters()}`;
+
 /** Registriert ein Konto und gibt den vergebenen Fantasienamen zurück. */
-export async function register(page: Page, team?: string) {
+export async function register(
+  page: Page,
+  team?: string,
+  options: { codeStem?: string; group?: string } = {},
+) {
+  const [mother, month, birthplace] = (options.codeStem ?? randomCodeStem()).split("-");
   await page.goto("/registrieren");
   const name = await page.getByLabel("Dein Benutzername").inputValue();
   await page.getByLabel("Passwort", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Passwort wiederholen").fill(PASSWORD);
   if (team) await page.getByLabel("Team").selectOption({ label: team });
+  await page.getByLabel("Vornamens deiner Mutter").fill(mother.toLowerCase());
+  await page.getByLabel("Dein Geburtsmonat").selectOption(month);
+  await page.getByLabel("Geburtsortes").fill(birthplace);
+  if (options.group) await page.getByLabel("Deine Gruppe").selectOption({ label: `Gruppe ${options.group}` });
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
   await expect(page).toHaveURL(/\/\?willkommen=1$/);
@@ -36,6 +52,17 @@ export async function logout(page: Page) {
 export async function loginAsAdmin(page: Page) {
   await login(page, ADMIN_NAME);
   await expect(page).toHaveURL(/\/admin$/);
+}
+
+/** Legt eine Gruppe im Studien-Editor an, falls es sie noch nicht gibt. */
+export async function ensureGroup(page: Page, letter: string) {
+  await page.goto("/admin/studie");
+  const heading = page.getByRole("heading", { name: `Gruppe ${letter}`, exact: true });
+  if ((await heading.count()) > 0) return;
+  await page.getByLabel("Buchstabe der neuen Gruppe").fill(letter.toLowerCase());
+  await page.getByLabel("Interne Bezeichnung der neuen Gruppe").fill(`E2E Gruppe ${letter}`);
+  await page.getByRole("button", { name: "Gruppe anlegen" }).click();
+  await expect(heading).toBeVisible();
 }
 
 export async function ensureTeam(page: Page, name: string) {

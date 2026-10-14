@@ -1,7 +1,7 @@
 import "server-only";
 import { createReadStream } from "node:fs";
 import type { Readable } from "node:stream";
-import { DeleteObjectsCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -59,4 +59,20 @@ export async function deleteObjects(keys: string[]) {
       Delete: { Objects: keys.map((Key) => ({ Key })) },
     }),
   );
+}
+
+/** Löscht alle Objekte unter einem Präfix, z. B. alle Aufnahmen einer Person. Gibt die Anzahl zurück. */
+export async function deleteByPrefix(prefix: string) {
+  let deleted = 0;
+  let token: string | undefined;
+  do {
+    const page = await client().send(
+      new ListObjectsV2Command({ Bucket: bucket(), Prefix: prefix, ContinuationToken: token }),
+    );
+    const keys = (page.Contents ?? []).flatMap((object) => (object.Key ? [object.Key] : []));
+    await deleteObjects(keys);
+    deleted += keys.length;
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return deleted;
 }

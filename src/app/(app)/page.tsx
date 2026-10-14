@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PendingUploads } from "@/components/pending-uploads";
 import { RecordingModal } from "@/components/recording-modal";
-import { Card, Notice, Spinner } from "@/components/ui";
-import { requireUser } from "@/lib/auth/guards";
+import { AttentionDot, Card, Notice, Spinner } from "@/components/ui";
+import { requireParticipant } from "@/lib/auth/guards";
 import { listEntries, toEntryDto, type EntryDto } from "@/lib/entries";
 import { formatDate, formatDuration } from "@/lib/format";
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
-  const user = await requireUser();
+  const user = await requireParticipant();
   const params = await searchParams;
   const entries = (await listEntries(user.id)).map(toEntryDto);
 
@@ -21,6 +21,18 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </Notice>
       )}
       {params.passwort && <Notice>Dein Passwort wurde geändert.</Notice>}
+      {!user.studyGroupId && (
+        <Link
+          href="/profil"
+          className="flex items-center gap-3 rounded-xl border border-record/40 px-3 py-2 text-sm hover:bg-accent-soft"
+        >
+          <AttentionDot />
+          <span>
+            <strong>Deine Gruppe fehlt noch.</strong> Trag sie ein, sobald du sie von der
+            Studienleitung erfahren hast.
+          </span>
+        </Link>
+      )}
 
       <RecordingModal label="Neuer Eintrag" />
       <PendingUploads />

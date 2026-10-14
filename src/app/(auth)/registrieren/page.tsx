@@ -5,7 +5,7 @@ import { asc } from "drizzle-orm";
 import { proposeName } from "@/lib/auth/accounts";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { teams } from "@/lib/db/schema";
+import { studyGroups, teams } from "@/lib/db/schema";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = { title: "Registrieren" };
@@ -14,8 +14,10 @@ export default async function RegisterPage() {
   const user = await getSessionUser();
   if (user) redirect(user.role === "admin" ? "/admin" : "/");
 
-  const [allTeams, proposedName] = await Promise.all([
+  const [allTeams, groups, proposedName] = await Promise.all([
     db.select({ id: teams.id, name: teams.name }).from(teams).orderBy(asc(teams.name)),
+    // Nur die Buchstaben; die interne Bezeichnung der Gruppen bleibt den Admins vorbehalten
+    db.select({ id: studyGroups.id, letter: studyGroups.letter }).from(studyGroups).orderBy(asc(studyGroups.letter)),
     proposeName(),
   ]);
 
@@ -29,7 +31,7 @@ export default async function RegisterPage() {
           deinen echten Namen noch deine E-Mail-Adresse.
         </p>
       </div>
-      <RegisterForm proposedName={proposedName} teams={allTeams} />
+      <RegisterForm proposedName={proposedName} teams={allTeams} groups={groups} />
       <p className="text-sm">
         Schon registriert?{" "}
         <Link href="/login" className="font-medium text-accent underline underline-offset-4">

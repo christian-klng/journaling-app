@@ -6,7 +6,7 @@ import { and, asc, desc, eq, gt, isNull, lt, max } from "drizzle-orm";
 import type { ActionState } from "@/lib/admin/actions";
 import { assertAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
-import { questionnaireItems, questionnaires, studyGroups, type ItemType } from "@/lib/db/schema";
+import { questionnaireItems, questionnaires, studyGroups, users, type ItemType } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { setSetting, STUDY_END_KEY, STUDY_START_KEY } from "@/lib/settings";
 import {
@@ -65,15 +65,14 @@ export async function updateGroupLabel(groupId: string, _state: ActionState, for
   return done();
 }
 
-/** Nur leere Gruppen lassen sich löschen; Abfragen, auch archivierte, hängen an ihrer Gruppe. */
+/** Nur leere Gruppen lassen sich löschen: ohne Abfragen (auch archivierte) und ohne Personen. */
 export async function deleteGroup(groupId: string) {
   await assertAdmin();
-  const [used] = await db
-    .select({ id: questionnaires.id })
-    .from(questionnaires)
-    .where(eq(questionnaires.groupId, groupId))
-    .limit(1);
-  if (used) return;
+  const [[questionnaire], [member]] = await Promise.all([
+    db.select({ id: questionnaires.id }).from(questionnaires).where(eq(questionnaires.groupId, groupId)).limit(1),
+    db.select({ id: users.id }).from(users).where(eq(users.studyGroupId, groupId)).limit(1),
+  ]);
+  if (questionnaire || member) return;
 
   await db.delete(studyGroups).where(eq(studyGroups.id, groupId));
   revalidatePath("/admin/studie", "layout");

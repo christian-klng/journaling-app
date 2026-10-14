@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLink } from "@/components/admin/export-link";
-import { Card } from "@/components/ui";
+import { BulkGroupForm } from "@/components/admin/participant-forms";
+import { AttentionDot, Card, Notice } from "@/components/ui";
 import { getOverview, type Member } from "@/lib/admin/queries";
 import { formatShortDate } from "@/lib/format";
+import { findDuplicateCodes, formatCode } from "@/lib/study/code";
 
 export const metadata: Metadata = { title: "Teams" };
 
-export default async function AdminHome() {
-  const overview = await getOverview();
+export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
+  const [overview, params] = await Promise.all([getOverview(), searchParams]);
+  const duplicates = findDuplicateCodes(overview.members);
   const hasMembers = overview.teams.some((t) => t.members.length > 0) || overview.withoutTeam.length > 0;
 
   return (
@@ -17,6 +20,24 @@ export default async function AdminHome() {
         <h1 className="text-xl font-semibold">Teams</h1>
         {overview.totalEntries > 0 && <ExportLink label="Alles exportieren" size="md" />}
       </div>
+
+      {params.geloescht && <Notice>Das Konto wurde mit allen Einträgen und Aufnahmen gelöscht.</Notice>}
+      {duplicates.length > 0 && (
+        <div role="alert" className="space-y-1 rounded-xl border border-record/40 px-3 py-2 text-sm">
+          <p className="font-medium">Doppelte Codes</p>
+          <p className="text-muted">
+            Diese Personen lassen sich über ihren Code nicht unterscheiden. Bitte frag nach und
+            korrigiere den Code oder die Gruppe auf ihrer Seite.
+          </p>
+          <ul className="list-inside list-disc">
+            {duplicates.map((d) => (
+              <li key={d.stem}>
+                <span className="font-mono">{d.stem}</span>: {d.people.map((p) => p.displayName).join(", ")}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {!hasMembers && overview.teams.length === 0 && (
         <p className="text-muted">
@@ -33,6 +54,20 @@ export default async function AdminHome() {
       ))}
       {(overview.withoutTeam.length > 0 || overview.teams.length > 0) && (
         <TeamCard name="Ohne Team" members={overview.withoutTeam} exportQuery="?team=none" muted />
+      )}
+
+      {overview.members.length > 0 && (
+        <Card className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="font-semibold">Gruppen zuweisen</h2>
+            <p className="text-sm text-muted">
+              Eine Zeile pro Person: persönlicher Code und Gruppe, z. B. „KA-03-BE A“. Bereits
+              eingetragene Gruppen werden überschrieben. Codes, die es mehrfach gibt, bitte einzeln
+              auf der Seite der Person zuweisen.
+            </p>
+          </div>
+          <BulkGroupForm />
+        </Card>
       )}
     </div>
   );
@@ -75,7 +110,13 @@ function TeamCard({
                     href={`/admin/nutzer/${member.id}`}
                     className="flex min-h-14 items-center justify-between gap-3 px-4 py-2 hover:bg-accent-soft"
                   >
-                    <span className="font-medium">{member.displayName}</span>
+                    <span className="min-w-0">
+                      <span className="block font-medium">{member.displayName}</span>
+                      <span className="flex items-center gap-1.5 font-mono text-xs text-muted">
+                        {formatCode(member.codeStem, member.groupLetter) ?? "kein Code"}
+                        {member.codeStem && !member.groupLetter && <AttentionDot className="scale-75" />}
+                      </span>
+                    </span>
                     <span className="text-right text-sm text-muted">
                       {member.entryCount === 0
                         ? "Noch kein Eintrag"
