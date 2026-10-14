@@ -38,7 +38,10 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Persönlicher Code und Gruppe in der Übersicht. Doppelte Codes werden angezeigt. Gruppen lassen
   sich auf der Seite der Person oder gesammelt über eine Liste von Codes zuweisen, Codes korrigieren.
 - Konten von Teilnehmenden löschen, mit allen Einträgen und Audiodateien.
-- ZIP-Export für alles, ein Team oder eine Person.
+- ZIP-Export für alles, ein Team oder eine Person: `antworten.csv` mit einer Zeile pro beantworteter
+  Frage (Code, Gruppe, Woche, Abfrage, Fragetext wie gesehen, Wert oder Transkript, nachgeholt ja/nein),
+  `teilnahme.csv` mit dem Stand pro Person, Woche und Abfrage, die Audiodateien mit Transkripten in
+  Ordnern nach Team, Code und Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
 - Hinweistext für die Transkription pflegen (unter „Einstellungen"): Namen, Fachbegriffe und
   Abkürzungen, die das Modell richtig schreiben soll.
 - Passwort zurücksetzen: Ein Einmal-Passwort wird einmalig angezeigt und gilt 72 Stunden. Die

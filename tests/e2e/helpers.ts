@@ -1,3 +1,4 @@
+import { inflateRawSync } from "node:zlib";
 import { expect, type Page } from "@playwright/test";
 import postgres from "postgres";
 import { addDays, berlinDate, mondayOf } from "../../src/lib/study/schedule";
@@ -169,4 +170,29 @@ export async function completeQuestionnaire(page: Page, link: RegExp | string = 
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
   await page.getByRole("button", { name: "Abschließen" }).click();
   await expect(page.getByText("Danke! Deine Antworten sind gespeichert.")).toBeVisible();
+}
+
+/** Liest eine Datei aus einem ZIP über das zentrale Verzeichnis, ohne zusätzliche Bibliothek. */
+export function readZipEntry(zip: Buffer, nameEndsWith: string) {
+  const end = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  let offset = zip.readUInt32LE(end + 16);
+  const count = zip.readUInt16LE(end + 10);
+  for (let i = 0; i < count; i++) {
+    const method = zip.readUInt16LE(offset + 10);
+    const compressedSize = zip.readUInt32LE(offset + 20);
+    const nameLength = zip.readUInt16LE(offset + 28);
+    const extraLength = zip.readUInt16LE(offset + 30);
+    const commentLength = zip.readUInt16LE(offset + 32);
+    const localOffset = zip.readUInt32LE(offset + 42);
+    const name = zip.subarray(offset + 46, offset + 46 + nameLength).toString("utf8");
+    if (name.endsWith(nameEndsWith)) {
+      const localNameLength = zip.readUInt16LE(localOffset + 26);
+      const localExtraLength = zip.readUInt16LE(localOffset + 28);
+      const start = localOffset + 30 + localNameLength + localExtraLength;
+      const data = zip.subarray(start, start + compressedSize);
+      return (method === 8 ? inflateRawSync(data) : data).toString("utf8");
+    }
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  throw new Error(`${nameEndsWith} fehlt im ZIP`);
 }

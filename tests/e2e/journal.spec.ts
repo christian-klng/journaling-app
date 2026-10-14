@@ -8,6 +8,8 @@ import {
   loginAsAdmin,
   logout,
   PASSWORD,
+  randomCodeStem,
+  readZipEntry,
   register,
   setupStudy,
   SMILEY_QUESTION,
@@ -17,6 +19,8 @@ import {
 const TEAM = "E2E-Team";
 const TRANSCRIPT = "Das ist ein Beispieltranskript.";
 let userName = "";
+const userStem = randomCodeStem();
+const userCode = `${userStem}-${FLOW_GROUP}`;
 let entryUrl = "";
 
 test.describe.configure({ mode: "serial" });
@@ -33,7 +37,7 @@ test("Admin legt ein Team und die Studie an", async ({ page }) => {
 });
 
 test("Nutzer registriert sich mit einem Fantasienamen als Benutzernamen", async ({ page }) => {
-  userName = await register(page, TEAM, { group: FLOW_GROUP });
+  userName = await register(page, TEAM, { codeStem: userStem, group: FLOW_GROUP });
   expect(userName).toMatch(/^\p{Lu}\p{L}+ \p{Lu}\p{L}+( \d+)?$/u);
   await expect(page.getByText(`Dein Benutzername ist ${userName}`)).toBeVisible();
   await expect(page.getByRole("button", { name: `Menü für ${userName}` })).toBeVisible();
@@ -141,12 +145,28 @@ test("Admin exportiert die Einträge als ZIP", async ({ page }) => {
   expect(zip.subarray(0, 2).toString()).toBe("PK");
   // Dateinamen stehen unkomprimiert im Archiv
   const names = zip.toString("latin1");
-  const folder = `${TEAM}/${userName.replace(/ /g, "-")}`;
-  expect(names).toContain(Buffer.from(`${folder}/`, "utf8").toString("latin1"));
-  for (const file of ["aufnahme-01.mp3", "aufnahme-01.txt", "uebersicht.csv"]) {
-    expect(names).toContain(file);
+  const utf8 = (text: string) => Buffer.from(text, "utf8").toString("latin1");
+  const folder = `${TEAM}/${userCode}_${userName.replace(/ /g, "-")}/W02_${FLOW_QUESTIONNAIRE}`;
+  for (const file of ["frage-03_aufnahme-01.mp3", "frage-03_aufnahme-01.txt"]) {
+    expect(names).toContain(utf8(`${folder}/${file}`));
   }
-  expect(names).not.toContain("zusammenfassung.txt");
+  for (const file of ["antworten.csv", "teilnahme.csv", "liesmich.txt"]) expect(names).toContain(file);
+  expect(names).not.toContain("uebersicht.csv");
+
+  // Eine Zeile pro Antwort der Person: Smiley, Skala und Audio
+  const answers = readZipEntry(zip, "antworten.csv").split("\r\n").filter((line) => line.includes(userCode));
+  expect(answers).toHaveLength(3);
+  expect(answers[0]).toContain(`"${SMILEY_QUESTION}";"4";"eher gut"`);
+  expect(answers[1]).toContain(`"7";""`);
+  expect(answers[2]).toMatch(new RegExp(`"Audio";"[^"]+";"";"";"${TRANSCRIPT}[^"]*";"1";`));
+  expect(answers[2]).toContain(`W02_${FLOW_QUESTIONNAIRE}/frage-03_aufnahme-01.mp3`);
+
+  // Woche 1 verpasst, Woche 2 erledigt
+  const participation = readZipEntry(zip, "teilnahme.csv").split("\r\n").filter((line) => line.includes(userCode));
+  expect(participation).toHaveLength(2);
+  expect(participation[0]).toContain(`"1";`);
+  expect(participation[0]).toContain(`"verpasst"`);
+  expect(participation[1]).toContain(`"erledigt"`);
 });
 
 test("Admin setzt das Passwort zurück, Nutzer muss ein neues vergeben", async ({ page }) => {

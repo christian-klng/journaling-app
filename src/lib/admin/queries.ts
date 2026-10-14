@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, count, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, isNull, max } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { entries, questionnaires, recordings, studyGroups, teams, users } from "@/lib/db/schema";
 
@@ -78,52 +78,65 @@ export async function getMember(userId: string) {
 
 export type ExportScope = { userId?: string; teamId?: string | "none" };
 
-/** Alle Einträge im gewählten Umfang, sortiert nach Team, Name und Datum. */
+/**
+ * Personen im gewählten Umfang mit allen Einträgen, Antworten und Aufnahmen, dazu alles für die
+ * Teilnahme: aktive Abfragen und der Stand der Einträge.
+ */
 export async function getExportData(scope: ExportScope) {
   const where = scope.userId
-    ? eq(users.id, scope.userId)
+    ? and(eq(users.id, scope.userId), eq(users.role, "user"))
     : scope.teamId === "none"
-      ? sql`${users.teamId} is null and ${users.role} = 'user'`
+      ? and(isNull(users.teamId), eq(users.role, "user"))
       : scope.teamId
-        ? eq(users.teamId, scope.teamId)
+        ? and(eq(users.teamId, scope.teamId), eq(users.role, "user"))
         : eq(users.role, "user");
 
-  const rows = await db
+  const people = await db
     .select({
-      userId: users.id,
+      id: users.id,
       displayName: users.displayName,
       codeStem: users.codeStem,
+      studyGroupId: users.studyGroupId,
       groupLetter: studyGroups.letter,
       teamName: teams.name,
-      entry: entries,
     })
-    .from(entries)
-    .innerJoin(users, eq(users.id, entries.userId))
+    .from(users)
     .leftJoin(teams, eq(teams.id, users.teamId))
     .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
     .where(where)
-    .orderBy(asc(teams.name), asc(users.displayName), asc(entries.createdAt));
+    .orderBy(asc(teams.name), asc(users.displayName));
 
-  const allRecordings = rows.length
-    ? await db
-        .select()
-        .from(recordings)
-        .where(
-          sql`${recordings.entryId} in (${sql.join(
-            rows.map((r) => sql`${r.entry.id}`),
-            sql`, `,
-          )})`,
-        )
-        .orderBy(asc(recordings.position))
-    : [];
+  const ids = people.map((p) => p.id);
+  const [personEntries, activeQuestionnaires] = await Promise.all([
+    ids.length
+      ? db.query.entries.findMany({
+          where: inArray(entries.userId, ids),
+          orderBy: asc(entries.createdAt),
+          with: {
+            recordings: { orderBy: asc(recordings.position) },
+            answers: true,
+            questionnaire: { columns: { name: true }, with: { items: { columns: { id: true, position: true } } } },
+            studyGroup: { columns: { letter: true } },
+          },
+        })
+      : [],
+    db
+      .select({
+        id: questionnaires.id,
+        groupId: questionnaires.groupId,
+        name: questionnaires.name,
+        opensOn: questionnaires.opensOn,
+        closesOn: questionnaires.closesOn,
+        position: questionnaires.position,
+      })
+      .from(questionnaires)
+      .where(isNull(questionnaires.archivedAt)),
+  ]);
 
-  return rows.map((row) => ({
-    ...row,
-    recordings: allRecordings.filter((r) => r.entryId === row.entry.id),
-  }));
+  return { people, entries: personEntries, questionnaires: activeQuestionnaires };
 }
 
-export type ExportRow = Awaited<ReturnType<typeof getExportData>>[number];
+export type ExportData = Awaited<ReturnType<typeof getExportData>>;
 
 /** Alles für die Teilnahme-Tabelle: Personen, aktive Abfragen und abgegebene Einträge. */
 export async function getParticipationData() {

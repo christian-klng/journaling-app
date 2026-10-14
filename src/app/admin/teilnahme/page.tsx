@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExportLink } from "@/components/admin/export-link";
 import { Card } from "@/components/ui";
 import { getParticipationData } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
@@ -51,9 +52,12 @@ export default async function ParticipationPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-xl font-semibold">Teilnahme</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold">Teilnahme</h1>
+          {rows.length > 0 && <ExportLink label="Alles exportieren" />}
+        </div>
         <p className="text-sm text-muted">
-          Pro Woche je ein Feld für {names.join(" und ") || "jede Abfrage"}, in dieser Reihenfolge. Die
+          Der Export enthält diese Tabelle als teilnahme.csv und alle Antworten als antworten.csv. Pro Woche je ein Feld für {names.join(" und ") || "jede Abfrage"}, in dieser Reihenfolge. Die
           Zuordnung zu echten Namen läuft über den persönlichen Code.
         </p>
       </div>

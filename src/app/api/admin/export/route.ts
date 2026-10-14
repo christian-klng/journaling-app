@@ -1,13 +1,28 @@
 import { once } from "node:events";
 import { Readable } from "node:stream";
 import { ZipArchive } from "archiver";
-import { assertAdmin, errorResponse, HttpError } from "@/lib/auth/guards";
 import { getExportData, type ExportScope } from "@/lib/admin/queries";
+import { assertAdmin, errorResponse, HttpError } from "@/lib/auth/guards";
 import { isUuid } from "@/lib/entries";
-import { entryFolder, recordingBaseName, toCsv } from "@/lib/export";
-import { formatIsoDate, formatShortDate, formatTime } from "@/lib/format";
+import {
+  ANSWER_COLUMNS,
+  answerRows,
+  entryFolderName,
+  PARTICIPATION_COLUMNS,
+  PARTICIPATION_LABELS,
+  personFolder,
+  questionNumber,
+  README_TEXT,
+  recordingBaseName,
+  toCsv,
+  type ExportEntry,
+} from "@/lib/export";
+import { formatIsoDate } from "@/lib/format";
+import { getStudyPeriod } from "@/lib/settings";
 import { getObjectStream } from "@/lib/storage";
 import { formatCode } from "@/lib/study/code";
+import { buildParticipation } from "@/lib/study/participation";
+import { berlinDate, weekNumber } from "@/lib/study/schedule";
 
 const EXTENSIONS: Record<string, string> = {
   "audio/webm": "webm",
@@ -30,7 +45,7 @@ export async function GET(request: Request) {
     if (teamId && teamId !== "none" && !isUuid(teamId)) throw new HttpError(400, "Ungültige Team-ID");
 
     const scope: ExportScope = userId ? { userId } : teamId ? { teamId } : {};
-    const rows = await getExportData(scope);
+    const [data, period] = await Promise.all([getExportData(scope), getStudyPeriod()]);
     const root = `export_${formatIsoDate(new Date())}`;
 
     const archive = new ZipArchive({ zlib: { level: 6 } });
@@ -42,54 +57,104 @@ export async function GET(request: Request) {
 
     // Der Inhalt wird nach und nach geschrieben, während der Browser schon herunterlädt
     void (async () => {
-      const entryNumbers = new Map<string, number>();
-      const csvRows: (string | number | null)[][] = [];
+      await add(README_TEXT, "liesmich.txt");
+      const rows: (string | number | null)[][] = [];
 
-      for (const row of rows) {
-        const entryNumber = (entryNumbers.get(row.userId) ?? 0) + 1;
-        entryNumbers.set(row.userId, entryNumber);
-        const folder = entryFolder({ ...row, entryNumber, createdAt: row.entry.createdAt });
+      for (const person of data.people) {
+        const code = formatCode(person.codeStem, person.groupLetter);
+        const base = personFolder({ teamName: person.teamName, code, displayName: person.displayName });
+        let freeNumber = 0;
 
-        for (const recording of row.recordings) {
-          const base = `${folder}/${recordingBaseName(recording.position)}`;
-          const key = recording.storageKeyMp3 ?? recording.storageKeyOriginal;
-          const extension = recording.storageKeyMp3 ? "mp3" : (EXTENSIONS[recording.mimeType] ?? "bin");
-          try {
-            await add(await getObjectStream(key), `${base}.${extension}`, true);
-          } catch (error) {
-            console.error(`Export: Audio ${key} fehlt`, error);
-            await add("Die Audiodatei konnte nicht gelesen werden.\n", `${base}.FEHLT.txt`);
+        for (const entry of data.entries.filter((e) => e.userId === person.id)) {
+          if (!entry.questionnaireId) freeNumber++;
+          const weekNo = entry.weekStart && period.start ? weekNumber(entry.weekStart, period.start) : null;
+          const folder = `${base}/${entryFolderName({
+            questionnaireName: entry.questionnaire?.name ?? null,
+            weekNumber: weekNo,
+            createdAt: entry.createdAt,
+            freeNumber,
+          })}`;
+          const items = entry.questionnaire?.items ?? [];
+
+          const files: ExportEntry["recordings"] = [];
+          for (const recording of entry.recordings) {
+            const number = recording.itemId ? questionNumber(items, recording.itemId) : null;
+            // Position innerhalb der Frage, nicht im ganzen Eintrag
+            const nth = entry.recordings.filter((r) => r.itemId === recording.itemId && r.position <= recording.position).length;
+            const name = `${folder}/${recordingBaseName(number, nth)}`;
+            const key = recording.storageKeyMp3 ?? recording.storageKeyOriginal;
+            const extension = recording.storageKeyMp3 ? "mp3" : (EXTENSIONS[recording.mimeType] ?? "bin");
+            let file = `${name}.${extension}`;
+            try {
+              await add(await getObjectStream(key), file, true);
+            } catch (error) {
+              console.error(`Export: Audio ${key} fehlt`, error);
+              file = `${name}.FEHLT.txt`;
+              await add("Die Audiodatei konnte nicht gelesen werden.\n", file);
+            }
+            await add(recording.transcript ? `${recording.transcript}\n` : "Noch kein Transkript vorhanden.\n", `${name}.txt`);
+            files.push({
+              itemId: recording.itemId,
+              itemText: recording.itemText,
+              position: recording.position,
+              durationSeconds: recording.durationSeconds,
+              transcript: recording.transcript,
+              file,
+            });
           }
-          await add(
-            recording.transcript ? `${recording.transcript}\n` : "Noch kein Transkript vorhanden.\n",
-            `${base}.txt`,
+
+          rows.push(
+            ...answerRows({
+              code,
+              displayName: person.displayName,
+              teamName: person.teamName,
+              groupLetter: entry.studyGroup?.letter ?? null,
+              questionnaireName: entry.questionnaire?.name ?? null,
+              weekNumber: weekNo,
+              weekStart: entry.weekStart,
+              late: entry.late,
+              createdAt: entry.createdAt,
+              completedAt: entry.completedAt,
+              items,
+              answers: entry.answers,
+              recordings: files,
+            }),
           );
         }
+      }
+      await add(toCsv(ANSWER_COLUMNS, rows), "antworten.csv");
 
-        csvRows.push([
-          row.teamName ?? "Ohne Team",
-          row.displayName,
-          formatCode(row.codeStem, row.groupLetter),
-          row.groupLetter,
-          entryNumber,
-          formatShortDate(row.entry.createdAt),
-          formatTime(row.entry.createdAt),
-          row.recordings.length,
-          row.recordings.reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0),
-          folder,
-        ]);
+      if (period.start && period.end) {
+        const participation = buildParticipation({
+          studyStart: period.start,
+          studyEnd: period.end,
+          today: berlinDate(),
+          people: data.people,
+          questionnaires: data.questionnaires,
+          entries: data.entries,
+        });
+        const participationRows = participation.rows.flatMap((row, index) => {
+          const person = data.people[index];
+          return row.cells.flatMap((week, w) =>
+            week.flatMap((status, q) =>
+              status === "none"
+                ? []
+                : [[
+                    formatCode(person.codeStem, person.groupLetter),
+                    person.displayName,
+                    person.teamName ?? "Ohne Team",
+                    person.groupLetter,
+                    participation.weeks[w].weekNumber,
+                    participation.weeks[w].weekStart,
+                    participation.names[q],
+                    PARTICIPATION_LABELS[status],
+                  ]],
+            ),
+          );
+        });
+        await add(toCsv(PARTICIPATION_COLUMNS, participationRows), "teilnahme.csv");
       }
 
-      await add(
-        toCsv(
-          [
-            "Team", "Fantasiename", "Code", "Gruppe", "Eintrag", "Datum", "Uhrzeit", "Aufnahmen",
-            "Dauer (Sekunden)", "Ordner",
-          ],
-          csvRows,
-        ),
-        "uebersicht.csv",
-      );
       await archive.finalize();
     })().catch((error) => {
       console.error("Export fehlgeschlagen", error);
