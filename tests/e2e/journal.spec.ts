@@ -58,7 +58,7 @@ test("Die Registrierung nimmt nur vorgeschlagene Namen an", async ({ page }) => 
   await page.getByLabel("Vornamens deiner Mutter").fill("KA");
   await page.getByLabel("Dein Geburtsmonat").selectOption("03");
   await page.getByLabel("Geburtsortes").fill("BE");
-  await page.getByRole("checkbox").check();
+  for (const checkbox of await page.getByRole("checkbox").all()) await checkbox.check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
   await expect(page.getByText("Bitte nimm den vorgeschlagenen Namen.")).toBeVisible();
   await expect(field).not.toHaveValue("Max Mustermann");

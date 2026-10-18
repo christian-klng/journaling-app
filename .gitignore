@@ -47,3 +47,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# Unterlagen für den Datenschutzbeauftragten; das Repository ist öffentlich
+/docs/datenschutz/

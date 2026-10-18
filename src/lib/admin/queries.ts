@@ -1,7 +1,7 @@
 import "server-only";
-import { and, asc, count, eq, inArray, isNotNull, isNull, max } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, max } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { entries, questionnaires, recordings, studyGroups, users } from "@/lib/db/schema";
+import { deletionNotices, entries, questionnaires, recordings, studyGroups, users } from "@/lib/db/schema";
 
 const memberColumns = {
   id: users.id,
@@ -163,4 +163,9 @@ export async function getParticipationData() {
       .where(isNotNull(entries.questionnaireId)),
   ]);
   return { people, questionnaires: activeQuestionnaires, entries: rows };
+}
+
+/** Gelöschte Konten, die die Studienleitung noch aus ihren Exporten entfernen muss. */
+export function getDeletionNotices() {
+  return db.select().from(deletionNotices).orderBy(desc(deletionNotices.deletedAt));
 }

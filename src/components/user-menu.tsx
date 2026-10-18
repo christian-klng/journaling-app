@@ -11,7 +11,7 @@ export function UserMenu({
   groupMissing = false,
 }: {
   displayName: string;
-  /** Link zu Code und Gruppe, nur für Teilnehmende */
+  /** Links zu Code und Gruppe und zum Beenden der Teilnahme, nur für Teilnehmende */
   profile?: boolean;
   groupMissing?: boolean;
 }) {
@@ -82,6 +82,16 @@ export function UserMenu({
           >
             Passwort ändern
           </Link>
+          {profile && (
+            <Link
+              role="menuitem"
+              href="/teilnahme-beenden"
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-sm hover:bg-accent-soft"
+            >
+              Teilnahme beenden
+            </Link>
+          )}
           <form action={logout}>
             <button
               role="menuitem"

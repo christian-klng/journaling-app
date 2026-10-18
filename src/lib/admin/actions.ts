@@ -3,19 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, lt, ne } from "drizzle-orm";
 import * as z from "zod";
 import { assertAdmin } from "@/lib/auth/guards";
 import { createAdminAccount } from "@/lib/auth/accounts";
 import { generateTempPassword, hashPassword, TEMP_PASSWORD_TTL_MS } from "@/lib/auth/password";
 import { destroyAllSessions } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { recordings, studyGroups, users } from "@/lib/db/schema";
+import { deletionNotices, recordings, studyGroups, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { processRecording } from "@/lib/pipeline";
-import { setSetting, TRANSCRIPTION_PROMPT_KEY, TRANSCRIPTION_PROMPT_MAX_LENGTH } from "@/lib/settings";
+import {
+  setSetting,
+  TRANSCRIPTION_ENABLED_KEY,
+  TRANSCRIPTION_PROMPT_KEY,
+  TRANSCRIPTION_PROMPT_MAX_LENGTH,
+} from "@/lib/settings";
 import { deleteByPrefix } from "@/lib/storage";
 import { parseCodeStem, parseGroupAssignments } from "@/lib/study/code";
+import { deleteParticipantAccount } from "@/lib/study/delete-account";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
 
@@ -43,22 +49,20 @@ export async function updateCodeStem(userId: string, _state: ActionState, formDa
   return { ok: true };
 }
 
-/**
- * Löscht ein Konto der Teilnehmenden endgültig, mit allen Einträgen und Aufnahmen. Erst die
- * Audiodateien, dann die Datenbank: Scheitert der Speicher, bleibt das Konto vollständig erhalten.
- */
+/** Löscht ein Konto der Teilnehmenden endgültig, mit allen Einträgen und Aufnahmen. */
 export async function deleteParticipant(userId: string) {
   await assertAdmin();
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.id, userId), eq(users.role, "user")));
-  if (!user) return;
-
-  await deleteByPrefix(`users/${user.id}/`);
-  await db.delete(users).where(eq(users.id, user.id));
+  if (!(await deleteParticipantAccount(userId, false))) return;
   revalidatePath("/admin", "layout");
   redirect("/admin?geloescht=1");
+}
+
+/** Die Studienleitung hat die gelöschte Person auch aus ihren Exporten entfernt. */
+export async function dismissDeletionNotice(id: string) {
+  await assertAdmin();
+  if (!isUuid(id)) return;
+  await db.delete(deletionNotices).where(eq(deletionNotices.id, id));
+  revalidatePath("/admin");
 }
 
 export type BulkState = (ActionState & { report?: string[] }) | undefined;
@@ -161,6 +165,35 @@ export async function saveTranscriptionPrompt(
 
   await setSetting(TRANSCRIPTION_PROMPT_KEY, parsed.data);
   revalidatePath("/admin/einstellungen");
+  return { ok: true };
+}
+
+/** Schaltet die KI-Transkription für alle neuen Aufnahmen ein oder aus. */
+export async function setTranscriptionEnabled(enabled: boolean) {
+  await assertAdmin();
+  await setSetting(TRANSCRIPTION_ENABLED_KEY, String(enabled));
+  revalidatePath("/admin/einstellungen");
+}
+
+/**
+ * Löscht alle Audiodateien, etwa nach dem Ende der Studie. Transkripte, Skalenwerte und Konten
+ * bleiben. Löscht alles unter users/, also auch Dateien, zu denen keine Aufnahme mehr gehört.
+ */
+export async function deleteAllAudio(_state: ActionState, formData: FormData): Promise<ActionState> {
+  await assertAdmin();
+  if (String(formData.get("confirm") ?? "").trim() !== "LÖSCHEN") {
+    return { error: "Bitte tippe LÖSCHEN in das Feld." };
+  }
+
+  const startedAt = new Date();
+  await deleteByPrefix("users/");
+  // Nur, was vor dem Löschen hochgeladen war. Noch nicht Transkribiertes gilt als erledigt, sonst
+  // warteten Ansicht und Hintergrundlauf ewig darauf.
+  await db
+    .update(recordings)
+    .set({ audioDeletedAt: startedAt, status: "done", updatedAt: startedAt })
+    .where(and(isNull(recordings.audioDeletedAt), lt(recordings.createdAt, startedAt)));
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }
 

@@ -9,6 +9,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/recordings/
     const { id } = await ctx.params;
     const recording = isUuid(id) ? await getAccessibleRecording(id, user) : null;
     if (!recording) throw new HttpError(404, "Aufnahme nicht gefunden");
+    if (recording.audioDeletedAt) throw new HttpError(410, "Die Audiodatei wurde gelöscht");
 
     const url = recording.storageKeyMp3
       ? await presignDownload(recording.storageKeyMp3, "audio/mpeg")

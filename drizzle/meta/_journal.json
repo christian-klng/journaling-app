@@ -36,6 +36,13 @@
       "when": 1791992111549,
       "tag": "0004_remove_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792319021111,
+      "tag": "0005_datenschutz",
+      "breakpoints": true
     }
   ]
 }

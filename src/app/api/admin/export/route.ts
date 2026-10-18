@@ -84,15 +84,17 @@ export async function GET(request: Request) {
             const name = `${folder}/${recordingBaseName(number, nth)}`;
             const key = recording.storageKeyMp3 ?? recording.storageKeyOriginal;
             const extension = recording.storageKeyMp3 ? "mp3" : (EXTENSIONS[recording.mimeType] ?? "bin");
-            let file = `${name}.${extension}`;
-            try {
-              await add(await getObjectStream(key), file, true);
-            } catch (error) {
-              console.error(`Export: Audio ${key} fehlt`, error);
-              file = `${name}.FEHLT.txt`;
-              await add("Die Audiodatei konnte nicht gelesen werden.\n", file);
+            let file = recording.audioDeletedAt ? "" : `${name}.${extension}`;
+            if (file) {
+              try {
+                await add(await getObjectStream(key), file, true);
+              } catch (error) {
+                console.error(`Export: Audio ${key} fehlt`, error);
+                file = `${name}.FEHLT.txt`;
+                await add("Die Audiodatei konnte nicht gelesen werden.\n", file);
+              }
             }
-            await add(recording.transcript ? `${recording.transcript}\n` : "Noch kein Transkript vorhanden.\n", `${name}.txt`);
+            await add(recording.transcript ? `${recording.transcript}\n` : "Kein Transkript vorhanden.\n", `${name}.txt`);
             files.push({
               itemId: recording.itemId,
               itemText: recording.itemText,

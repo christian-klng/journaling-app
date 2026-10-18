@@ -141,7 +141,7 @@ export function answerRows(entry: ExportEntry): (string | number | null)[][] {
         list.map((r) => r.transcript ?? "").filter(Boolean).join("\n\n"),
         list.length,
         list.reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0),
-        list.map((r) => r.file).join("; "),
+        list.map((r) => r.file).filter(Boolean).join("; "),
       ],
     });
   }
@@ -182,7 +182,7 @@ teilnahme.csv
 Ordner
   Gruppe / Code_Fantasiename / Woche_Abfrage / frage-NN_aufnahme-NN.mp3 und .txt (Transkript)
   Der erste Ordner ist die aktuelle Gruppe der Person. Ein X im Code steht für eine noch
-  fehlende Gruppe.
+  fehlende Gruppe. Wurden die Audiodateien gelöscht, gibt es nur noch die .txt-Dateien.
 
 Woche 1 ist die Woche, in die der Studienstart fällt. Alle Zeiten in deutscher Zeit.
 `;

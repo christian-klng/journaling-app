@@ -8,6 +8,7 @@ import {
   login,
   loginAsAdmin,
   logout,
+  PASSWORD,
   randomCodeStem,
   register,
   setupStudy,
@@ -162,4 +163,40 @@ test("Konten ohne Code müssen ihn zuerst nachtragen", async ({ page }) => {
 
   await page.goto("/profil");
   await expect(page.getByText(`${code}-?`)).toBeVisible();
+});
+
+test("Teilnehmende beenden ihre Teilnahme selbst, die Studienleitung erfährt Name und Code", async ({ page }) => {
+  const code = randomCodeStem();
+  const name = await register(page, { codeStem: code, group: FLOW_GROUP });
+  await completeQuestionnaire(page);
+
+  await page.getByRole("button", { name: /Menü für/ }).click();
+  await page.getByRole("menuitem", { name: "Teilnahme beenden" }).click();
+  await page.getByLabel("Zur Bestätigung dein Passwort").fill("falsch-falsch");
+  await page.getByRole("button", { name: "Konto und Einträge löschen" }).click();
+  await expect(page.getByText("Das Passwort stimmt nicht.")).toBeVisible();
+
+  await page.getByLabel("Zur Bestätigung dein Passwort").fill(PASSWORD);
+  await page.getByRole("button", { name: "Konto und Einträge löschen" }).click();
+  await expect(page).toHaveURL(/\/login\?geloescht=1$/);
+  await expect(page.getByText("Dein Konto und alle Einträge sind gelöscht.")).toBeVisible();
+
+  await login(page, name);
+  await expect(page.getByText("Benutzername oder Passwort stimmen nicht.")).toBeVisible();
+
+  await loginAsAdmin(page);
+  const notices = page.getByRole("alert").filter({ hasText: "Gelöschte Konten" });
+  const notice = notices.getByRole("listitem").filter({ hasText: name });
+  await expect(notice).toContainText(`${code}-${FLOW_GROUP}`);
+  await expect(notice).toContainText("selbst beendet");
+  await notice.getByRole("button", { name: "Erledigt" }).click();
+  await expect(notices.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
+});
+
+test("Datenschutz und Impressum sind ohne Anmeldung erreichbar", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("link", { name: "Datenschutz" }).click();
+  await expect(page.getByRole("heading", { name: "Datenschutzinformation" })).toBeVisible();
+  await page.getByRole("link", { name: "Impressum" }).click();
+  await expect(page.getByRole("heading", { name: "Impressum" })).toBeVisible();
 });

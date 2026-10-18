@@ -39,6 +39,8 @@ export const users = pgTable(
     mustChangePassword: boolean("must_change_password").notNull().default(false),
     tempPasswordExpiresAt: timestamp("temp_password_expires_at", { withTimezone: true }),
     consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),
+    // Fassung des Einwilligungstextes, dem die Person zugestimmt hat (CONSENT_VERSION in lib/legal.ts)
+    consentVersion: text("consent_version").notNull().default("1"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("users_code_stem_idx").on(t.codeStem)],
@@ -137,11 +139,27 @@ export const recordings = pgTable(
     transcript: text("transcript"),
     error: text("error"),
     attempts: integer("attempts").notNull().default(0),
+    // Audiodateien gelöscht, z. B. nach dem Ende der Studie. Transkript und Angaben bleiben.
+    audioDeletedAt: timestamp("audio_deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("recordings_entry_position_idx").on(t.entryId, t.position)],
 );
+
+/**
+ * Gelöschte Konten der Teilnehmenden, damit die Studienleitung sie auch aus bereits exportierten
+ * Daten entfernen kann. Enthält nur Fantasiename und Code, keine Einträge.
+ */
+export const deletionNotices = pgTable("deletion_notices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  displayName: text("display_name").notNull(),
+  // Vollständiger Code mit Gruppe, soweit vorhanden, z. B. "KA-03-BE-A"
+  code: text("code"),
+  // Die Person hat ihre Teilnahme selbst beendet, sonst hat ein Admin gelöscht
+  bySelf: boolean("by_self").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 /** Von Admins in der App gepflegte Einstellungen, z. B. der Hinweistext für die Transkription. */
 export const settings = pgTable("settings", {
@@ -248,4 +266,5 @@ export type Answer = typeof answers.$inferSelect;
 export type StudyGroup = typeof studyGroups.$inferSelect;
 export type Questionnaire = typeof questionnaires.$inferSelect;
 export type QuestionnaireItem = typeof questionnaireItems.$inferSelect;
+export type DeletionNotice = typeof deletionNotices.$inferSelect;
 export type ItemType = (typeof itemTypeEnum.enumValues)[number];

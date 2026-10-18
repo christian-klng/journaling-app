@@ -59,8 +59,14 @@ function RecordingView({ recording, label }: { recording: RecordingDto; label: b
           {recording.durationSeconds != null && ` · ${formatDuration(recording.durationSeconds)}`}
         </p>
       )}
-      <audio controls preload="none" src={`/api/recordings/${recording.id}/audio`} className="w-full" />
-      {recording.status === "done" && <p className="whitespace-pre-wrap leading-relaxed">{recording.transcript}</p>}
+      {recording.audioDeleted ? (
+        <p className="text-sm text-muted">Die Audiodatei wurde nach dem Ende der Studie gelöscht.</p>
+      ) : (
+        <audio controls preload="none" src={`/api/recordings/${recording.id}/audio`} className="w-full" />
+      )}
+      {recording.status === "done" && recording.transcript && (
+        <p className="whitespace-pre-wrap leading-relaxed">{recording.transcript}</p>
+      )}
       {(recording.status === "uploaded" || recording.status === "transcribing") && (
         <p className="flex items-center gap-2 text-sm text-muted" role="status">
           <Spinner /> Wird transkribiert …

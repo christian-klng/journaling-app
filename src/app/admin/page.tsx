@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLink } from "@/components/admin/export-link";
 import { BulkGroupForm } from "@/components/admin/participant-forms";
-import { AttentionDot, Card, Notice } from "@/components/ui";
-import { getOverview, type Member } from "@/lib/admin/queries";
+import { AttentionDot, Button, Card, Notice } from "@/components/ui";
+import { dismissDeletionNotice } from "@/lib/admin/actions";
+import { getDeletionNotices, getOverview, type Member } from "@/lib/admin/queries";
 import { formatShortDate } from "@/lib/format";
 import { findDuplicateCodes, formatCode } from "@/lib/study/code";
 
 export const metadata: Metadata = { title: "Übersicht" };
 
 export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
-  const [overview, params] = await Promise.all([getOverview(), searchParams]);
+  const [overview, notices, params] = await Promise.all([getOverview(), getDeletionNotices(), searchParams]);
   const duplicates = findDuplicateCodes(overview.members);
 
   return (
@@ -21,6 +22,34 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
       </div>
 
       {params.geloescht && <Notice>Das Konto wurde mit allen Einträgen und Aufnahmen gelöscht.</Notice>}
+      {notices.length > 0 && (
+        <div role="alert" className="space-y-2 rounded-xl border border-record/40 px-3 py-2 text-sm">
+          <p className="font-medium">Gelöschte Konten</p>
+          <p className="text-muted">
+            Diese Personen haben ihre Teilnahme beendet oder wurden gelöscht. Bitte entferne sie auch
+            aus bereits exportierten Daten und hake sie dann ab.
+          </p>
+          <ul className="divide-y divide-border">
+            {notices.map((notice) => (
+              <li key={notice.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                <span>
+                  {notice.displayName}
+                  <span className="font-mono text-muted"> {notice.code ?? "kein Code"}</span>
+                  <span className="text-muted">
+                    {" "}
+                    · {notice.bySelf ? "selbst beendet" : "von Admin gelöscht"} am {formatShortDate(notice.deletedAt)}
+                  </span>
+                </span>
+                <form action={dismissDeletionNotice.bind(null, notice.id)}>
+                  <Button type="submit" variant="secondary" size="sm">
+                    Erledigt
+                  </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {duplicates.length > 0 && (
         <div role="alert" className="space-y-1 rounded-xl border border-record/40 px-3 py-2 text-sm">
           <p className="font-medium">Doppelte Codes</p>

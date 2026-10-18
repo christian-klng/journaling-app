@@ -4,12 +4,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pipeline as streamPipeline } from "node:stream/promises";
-import { and, eq, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { recordings } from "@/lib/db/schema";
 import { convertToMp3 } from "./audio";
 import { transcribe } from "./cortecs";
-import { getTranscriptionPrompt } from "./settings";
+import { getTranscriptionPrompt, isTranscriptionEnabled } from "./settings";
 import { getObjectStream, putFile } from "./storage";
 
 const MAX_ATTEMPTS = 3;
@@ -29,7 +29,7 @@ export async function processRecording(recordingId: string) {
       error: null,
       updatedAt: new Date(),
     })
-    .where(and(eq(recordings.id, recordingId), ne(recordings.status, "done")))
+    .where(and(eq(recordings.id, recordingId), ne(recordings.status, "done"), isNull(recordings.audioDeletedAt)))
     .returning();
   if (!recording) return;
 
@@ -50,7 +50,8 @@ export async function processRecording(recordingId: string) {
       .set({ storageKeyMp3, durationSeconds: durationSeconds ?? recording.durationSeconds })
       .where(eq(recordings.id, recordingId));
 
-    const transcript = await transcribe(mp3Path, await getTranscriptionPrompt());
+    // Ausgeschaltet verlässt die Aufnahme den Server nicht; sie bleibt ohne Transkript
+    const transcript = (await isTranscriptionEnabled()) ? await transcribe(mp3Path, await getTranscriptionPrompt()) : null;
     await db
       .update(recordings)
       .set({ transcript, status: "done", updatedAt: new Date() })
@@ -81,6 +82,7 @@ export async function recoverStuckWork() {
         inArray(recordings.status, ["uploaded", "transcribing", "failed"]),
         lt(recordings.updatedAt, stuckBefore),
         lt(recordings.attempts, MAX_ATTEMPTS),
+        isNull(recordings.audioDeletedAt),
       ),
     );
   for (const { id } of stuckRecordings) await processRecording(id);

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "@/lib/db";
 import { studyGroups, users } from "@/lib/db/schema";
+import { CONSENT_VERSION } from "@/lib/legal";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
 import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
 import { isNameTaken, proposeName } from "./accounts";
@@ -33,6 +34,7 @@ const RegisterSchema = z.object({
   passwordRepeat: z.string(),
   groupId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
+  adult: z.literal("on", "Teilnehmen kannst du nur, wenn du mindestens 18 Jahre alt bist."),
 });
 
 export async function register(_state: FormState, formData: FormData): Promise<FormState> {
@@ -50,6 +52,7 @@ export async function register(_state: FormState, formData: FormData): Promise<F
     password: formData.get("password"),
     passwordRepeat: formData.get("passwordRepeat"),
     consent: formData.get("consent"),
+    adult: formData.get("adult"),
   });
   if (!parsed.success) return { error: firstError(parsed.error), fields };
   const data = parsed.data;
@@ -91,6 +94,7 @@ export async function register(_state: FormState, formData: FormData): Promise<F
       codeStem: codeStemFromParts(code.data),
       studyGroupId,
       consentAt: new Date(),
+      consentVersion: CONSENT_VERSION,
     })
     .onConflictDoNothing()
     .returning({ id: users.id });

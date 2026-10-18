@@ -37,7 +37,7 @@ export async function register(page: Page, options: { codeStem?: string; group?:
   await page.getByLabel("Dein Geburtsmonat").selectOption(month);
   await page.getByLabel("Geburtsortes").fill(birthplace);
   if (options.group) await page.getByLabel("Deine Gruppe").selectOption({ label: `Gruppe ${options.group}` });
-  await page.getByRole("checkbox").check();
+  for (const checkbox of await page.getByRole("checkbox").all()) await checkbox.check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
   await expect(page).toHaveURL(/\/\?willkommen=1$/);
   return name;

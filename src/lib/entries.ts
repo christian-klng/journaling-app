@@ -27,6 +27,8 @@ export type RecordingDto = {
   position: number;
   status: Recording["status"];
   transcript: string | null;
+  /** Audiodatei nach dem Ende der Studie gelöscht */
+  audioDeleted: boolean;
   durationSeconds: number | null;
   createdAt: string;
 };
@@ -63,6 +65,7 @@ const toRecordingDto = (r: Recording): RecordingDto => ({
   position: r.position,
   status: r.status,
   transcript: r.transcript,
+  audioDeleted: r.audioDeletedAt !== null,
   durationSeconds: r.durationSeconds,
   createdAt: r.createdAt.toISOString(),
 });

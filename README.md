@@ -28,6 +28,10 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Auf eine Audio-Frage antwortet man mit einer oder mehreren Aufnahmen, die transkribiert werden.
   Bricht der Upload ab, bleibt die Aufnahme auf dem Gerät gesichert und lässt sich später senden.
 - Erledigte Abfragen lassen sich mit Antworten, Aufnahmen und Transkripten ansehen.
+- Bei der Registrierung willigen Teilnehmende nach der Datenschutzinformation ein und bestätigen,
+  dass sie volljährig sind. Gespeichert werden Zeitpunkt und Fassung der Einwilligung.
+- Unter „Teilnahme beenden“ widerrufen Teilnehmende ihre Einwilligung: Nach Eingabe des Passworts
+  sind Konto, Einträge und Audiodateien sofort gelöscht.
 
 **Studienleitung (Admins)**
 
@@ -38,6 +42,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   Antworten behalten den Text, den die Person gesehen hat.
 - *Übersicht:* alle Teilnehmenden nach Gruppe geordnet, mit Code und Zahl der Einträge. Doppelte
   Codes werden angezeigt. Gruppen lassen sich einzeln oder gesammelt über eine Liste von Codes zuweisen.
+  Gelöschte Konten stehen mit Fantasiename und Code oben, bis die Studienleitung sie auch aus
+  ihren Exporten entfernt und abgehakt hat.
 - *Personenseite:* Einträge lesen und anhören, Gruppe ändern, Code korrigieren, Passwort
   zurücksetzen (Einmal-Passwort, 72 Stunden gültig), Konto samt Einträgen und Audiodateien löschen.
 - *Teilnahme:* Tabelle pro Person und Woche, ob jede Abfrage erledigt, nachgeholt, begonnen oder
@@ -47,8 +53,9 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
   und Woche sowie `liesmich.txt` mit der Erklärung der Spalten.
 - *Admins:* weitere Admins anlegen und löschen. Admin-Konten sind von denen der Teilnehmenden
   getrennt.
-- *Einstellungen:* Hinweistext für die Transkription mit Namen, Fachbegriffen und Abkürzungen, die
-  das Modell richtig schreiben soll.
+- *Einstellungen:* Transkription per KI ein- und ausschalten. Hinweistext für die Transkription mit
+  Namen, Fachbegriffen und Abkürzungen, die das Modell richtig schreiben soll. Alle Audiodateien
+  löschen, etwa nach dem Ende der Studie; Transkripte und Skalenwerte bleiben.
 
 ## Ablauf einer Studie
 
@@ -82,7 +89,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 | Aufnahme, Upload, Umwandlung, Transkription | `src/components/study/use-recorder.ts`, `src/app/api/recordings/`, `src/lib/pipeline.ts`, `src/lib/cortecs.ts` |
 | Audio-Speicher | `src/lib/storage.ts` |
 | Export | `src/app/api/admin/export/route.ts`, `src/lib/export.ts` |
-| Konto löschen | `deleteParticipant` in `src/lib/admin/actions.ts` |
+| Konto löschen | `src/lib/study/delete-account.ts` |
+| Datenschutzinformation, Impressum | `src/app/(public)/`, Angaben in `src/lib/legal.ts` |
 
 ## Lokal entwickeln
 
@@ -218,8 +226,11 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
 
 ## Datenschutz
 
+- Datenschutzinformation (`/datenschutz`) und Impressum (`/impressum`) sind ohne Anmeldung
+  erreichbar und auf jeder Seite verlinkt. Namen, Adressen und Löschdatum stehen in
+  `src/lib/legal.ts`. Ändert sich der Inhalt, `CONSENT_VERSION` erhöhen.
 - Bei der Registrierung willigen Teilnehmende ein, dass ihre Aufnahmen gespeichert, per KI
-  transkribiert und von der wissenschaftlichen Begleitung eingesehen werden.
+  transkribiert und von der Studienleitung angehört und ausgewertet werden.
 - Die App speichert weder E-Mail-Adressen noch echte Namen. Konten heißen nach einem zufälligen
   Fantasienamen, den die App vorschlägt; eigene Namen lassen sich nicht eintragen.
 - Der persönliche Code verknüpft Antworten mit späteren Befragungen, ohne Namen zu erfassen. Die
@@ -230,9 +241,12 @@ Konfiguration beim `command` ergänzen und den Proxy neu starten:
 - Teilnehmende sehen nur ihre eigenen Einträge und von den Gruppen nur den Buchstaben. Die interne
   Bezeichnung der Gruppen und die Fragen der anderen Gruppe bekommen sie nicht zu sehen.
 - Audio und Texte liegen in der EU, auf dem Server und im Object Storage bei Hetzner. Cortecs leitet
-  zur Transkription nur an Anbieter in der EU weiter. Sonst gibt die App keine Daten weiter.
-- Teilnehmende können Einträge nicht selbst löschen. Auf Wunsch löscht ein Admin das ganze Konto
-  samt Einträgen und Audiodateien.
+  zur Transkription nur an Anbieter mit Sitz in der EU weiter. Ist die Transkription ausgeschaltet,
+  verlassen Aufnahmen den Server nicht. Sonst gibt die App keine Daten weiter.
+- Die IP-Adresse wird nur für die Sperre gegen Passwort-Raten gespeichert und nach 15 Minuten
+  gelöscht.
+- Einzelne Einträge lassen sich nicht löschen, das ganze Konto schon: von den Teilnehmenden selbst
+  oder von einem Admin.
 
 ## Bekannte Grenzen
 

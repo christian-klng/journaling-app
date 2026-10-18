@@ -82,13 +82,26 @@ export function RegisterForm({
           </select>
         </Field>
       )}
-      <label className="flex items-start gap-3 text-sm">
-        <input type="checkbox" name="consent" required className="mt-0.5 size-5 accent-accent" />
-        <span>
-          Ich bin einverstanden, dass meine Aufnahmen gespeichert und von einer KI in der EU
-          transkribiert werden und dass die wissenschaftliche Begleitung sie anhören und lesen kann.
-        </span>
-      </label>
+      <div className="space-y-3 text-sm">
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="consent" required className="mt-0.5 size-5 shrink-0 accent-accent" />
+          <span>
+            Ich habe die{" "}
+            {/* Neuer Tab, damit das halb ausgefüllte Formular erhalten bleibt */}
+            <a href="/datenschutz" target="_blank" className="font-medium text-accent underline underline-offset-4">
+              Datenschutzinformation
+            </a>{" "}
+            gelesen und willige ein, dass meine Antworten und Aufnahmen für die Studie gespeichert, von
+            einer KI in der EU transkribiert und von der Studienleitung angehört und ausgewertet werden.
+            Spreche ich von mir aus über meine Gesundheit oder andere besonders geschützte Themen, gilt
+            meine Einwilligung ausdrücklich auch dafür. Ich kann sie jederzeit widerrufen.
+          </span>
+        </label>
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="adult" required className="mt-0.5 size-5 shrink-0 accent-accent" />
+          <span>Ich bin mindestens 18 Jahre alt und nehme freiwillig teil.</span>
+        </label>
+      </div>
       <ErrorMessage>{state?.error}</ErrorMessage>
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Konto wird angelegt …" : "Konto anlegen"}

@@ -24,6 +24,13 @@ export async function getTranscriptionPrompt() {
   return value?.trim() || null;
 }
 
+export const TRANSCRIPTION_ENABLED_KEY = "transcription_enabled";
+
+/** Transkription per KI; ohne Eintrag eingeschaltet. Ausgeschaltet bleiben neue Aufnahmen ohne Transkript. */
+export async function isTranscriptionEnabled() {
+  return (await getSetting(TRANSCRIPTION_ENABLED_KEY)) !== "false";
+}
+
 export const STUDY_START_KEY = "study_start";
 export const STUDY_END_KEY = "study_end";
 

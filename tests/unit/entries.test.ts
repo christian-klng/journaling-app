@@ -32,6 +32,7 @@ const recording = (index: number, status: RecordingStatus, itemId: string | null
   transcript: status === "done" ? "Text" : null,
   error: null,
   attempts: 1,
+  audioDeletedAt: null,
   createdAt: now,
   updatedAt: now,
 });
@@ -103,7 +104,7 @@ describe("toEntryDto", () => {
   it("gibt keine Speicherpfade oder Fehlertexte heraus", () => {
     const dto = toEntryDto(entry({ recordings: [recording(0, "done", "audio")] }));
     expect(Object.keys(dto.parts[0].recordings[0]).sort()).toEqual(
-      ["createdAt", "durationSeconds", "id", "position", "status", "transcript"].sort(),
+      ["audioDeleted", "createdAt", "durationSeconds", "id", "position", "status", "transcript"].sort(),
     );
   });
 });
