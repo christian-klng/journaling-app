@@ -7,9 +7,9 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Journaling", template: "%s · Journaling" },
+  title: { default: "LimeJournal", template: "%s · LimeJournal" },
   description: "Dein Audio-Tagebuch für Projekt- und Gründungsarbeit.",
-  appleWebApp: { capable: true, title: "Journaling", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "LimeJournal", statusBarStyle: "default" },
   robots: { index: false, follow: false },
 };
 

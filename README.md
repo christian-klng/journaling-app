@@ -1,4 +1,4 @@
-# Journaling – Audio-Tagebuch
+# LimeJournal – Audio-Tagebuch
 
 Web-App für regelmäßige, gesprochene Rückblicke auf Projekt- oder Gründungsarbeit. Teilnehmende
 beantworten wöchentliche Abfragen (z. B. Check-In und Check-Out) mit Skalen und gesprochenen

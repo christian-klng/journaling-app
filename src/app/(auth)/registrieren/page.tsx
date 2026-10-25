@@ -33,7 +33,7 @@ export default async function RegisterPage() {
       <RegisterForm proposedName={proposedName} groups={groups} />
       <p className="text-sm">
         Schon registriert?{" "}
-        <Link href="/login" className="font-medium text-accent underline underline-offset-4">
+        <Link href="/login" className="font-medium text-accent-ink underline underline-offset-4">
           Anmelden
         </Link>
       </p>

@@ -132,7 +132,7 @@ export function AudioAnswer({
   return (
     <div className="space-y-3">
       {count > 0 && (
-        <p className="flex items-center gap-2 font-medium text-accent" role="status">
+        <p className="flex items-center gap-2 font-medium text-accent-ink" role="status">
           <span aria-hidden>✓</span>
           {count === 1 ? "Aufnahme gespeichert" : `${count} Aufnahmen gespeichert`}
         </p>

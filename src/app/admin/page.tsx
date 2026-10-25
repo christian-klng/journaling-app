@@ -70,7 +70,7 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
       {overview.members.length === 0 && (
         <p className="text-muted">
           Noch ist niemand registriert. Unter{" "}
-          <Link href="/admin/studie" className="font-medium text-accent underline underline-offset-4">
+          <Link href="/admin/studie" className="font-medium text-accent-ink underline underline-offset-4">
             Studie
           </Link>{" "}
           legst du die Gruppen an, die bei der Registrierung zur Auswahl stehen.

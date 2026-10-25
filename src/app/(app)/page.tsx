@@ -55,7 +55,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <Link
           key={`${slot.questionnaire.id}-${slot.weekStart}`}
           href={slotHref(slot)}
-          className="flex w-full flex-col items-center gap-2 rounded-3xl bg-accent px-6 py-7 text-center text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent dark:text-background"
+          className="flex w-full flex-col items-center gap-2 rounded-3xl bg-accent px-6 py-7 text-center text-on-accent transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <MicIcon className="size-9" />
           <span className="text-xl font-semibold">

@@ -12,9 +12,9 @@ import { berlinDate } from "@/lib/study/schedule";
 export const metadata: Metadata = { title: "Teilnahme" };
 
 const STATUS: Record<ParticipationStatus, { symbol: string; label: string; className: string }> = {
-  done: { symbol: "✓", label: "erledigt", className: "bg-accent text-white dark:text-background" },
-  late: { symbol: "✓", label: "nachgeholt", className: "bg-accent-soft text-accent ring-1 ring-accent" },
-  started: { symbol: "…", label: "begonnen", className: "bg-accent-soft text-accent" },
+  done: { symbol: "✓", label: "erledigt", className: "bg-accent text-on-accent" },
+  late: { symbol: "✓", label: "nachgeholt", className: "bg-accent-soft text-accent-ink ring-1 ring-accent" },
+  started: { symbol: "…", label: "begonnen", className: "bg-accent-soft text-accent-ink" },
   missed: { symbol: "✗", label: "verpasst", className: "bg-danger-soft text-danger" },
   open: { symbol: "○", label: "läuft gerade", className: "ring-1 ring-border text-muted" },
   upcoming: { symbol: "·", label: "kommt noch", className: "text-muted" },
@@ -31,7 +31,7 @@ export default async function ParticipationPage() {
         <h1 className="text-xl font-semibold">Teilnahme</h1>
         <p className="text-muted">
           Bitte zuerst unter{" "}
-          <Link href="/admin/studie" className="font-medium text-accent underline underline-offset-4">
+          <Link href="/admin/studie" className="font-medium text-accent-ink underline underline-offset-4">
             Studie
           </Link>{" "}
           den Studienzeitraum festlegen.
@@ -88,7 +88,7 @@ export default async function ParticipationPage() {
                 return (
                   <tr key={row.personId}>
                     <th scope="row" className="sticky left-0 bg-surface px-3 py-2 text-left font-normal">
-                      <Link href={`/admin/nutzer/${person.id}`} className="block font-medium hover:text-accent">
+                      <Link href={`/admin/nutzer/${person.id}`} className="block font-medium hover:text-accent-ink">
                         {person.displayName}
                       </Link>
                       <span className="block font-mono text-xs text-muted">

@@ -46,7 +46,7 @@ export function UserMenu({
       >
         <span
           aria-hidden
-          className="relative flex size-7 items-center justify-center rounded-full bg-accent-soft text-accent"
+          className="relative flex size-7 items-center justify-center rounded-full bg-accent-soft text-accent-ink"
         >
           {displayName[0]}
           {groupMissing && <AttentionDot className="absolute -top-0.5 -right-0.5" />}

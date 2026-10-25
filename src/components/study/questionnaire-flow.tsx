@@ -131,9 +131,9 @@ export function QuestionnaireFlow({
                 <button
                   type="button"
                   onClick={() => go(index)}
-                  className="flex w-full items-start gap-3 rounded-lg py-1 text-left hover:text-accent"
+                  className="flex w-full items-start gap-3 rounded-lg py-1 text-left hover:text-accent-ink"
                 >
-                  <span aria-hidden className={answered(item) ? "text-accent" : "text-muted"}>
+                  <span aria-hidden className={answered(item) ? "text-accent-ink" : "text-muted"}>
                     {answered(item) ? "✓" : "–"}
                   </span>
                   <span className="text-sm">

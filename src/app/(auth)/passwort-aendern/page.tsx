@@ -25,7 +25,7 @@ export default async function ChangePasswordPage() {
         <p className="text-sm">
           <Link
             href={user.role === "admin" ? "/admin" : "/"}
-            className="font-medium text-accent underline underline-offset-4"
+            className="font-medium text-accent-ink underline underline-offset-4"
           >
             Zurück
           </Link>

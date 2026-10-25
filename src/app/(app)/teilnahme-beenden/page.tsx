@@ -28,7 +28,7 @@ export default async function EndParticipationPage() {
           Die Studienleitung erfährt nur deinen Fantasienamen und Code, damit sie dich auch aus bereits
           exportierten Daten entfernt. Was schon anonymisiert in Ergebnisse eingeflossen ist, bleibt
           bestehen. Nachteile entstehen dir keine. Mehr dazu in der{" "}
-          <Link href="/datenschutz" className="text-accent underline underline-offset-4">
+          <Link href="/datenschutz" className="text-accent-ink underline underline-offset-4">
             Datenschutzinformation
           </Link>
           .

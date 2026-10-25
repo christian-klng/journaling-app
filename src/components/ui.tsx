@@ -3,7 +3,7 @@ import { cloneElement, useId, type ComponentProps, type ReactElement, type React
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-white hover:bg-accent-strong dark:text-background",
+  primary: "bg-accent text-on-accent hover:bg-accent-strong",
   secondary: "border border-border bg-surface hover:bg-accent-soft",
   danger: "border border-danger/40 text-danger hover:bg-danger-soft",
   ghost: "text-muted hover:bg-accent-soft hover:text-foreground",

@@ -6,9 +6,12 @@
   --foreground: #1f2430;
   --muted: #667085;
   --border: #e4ded4;
-  --accent: #0f766e;
-  --accent-strong: #0b5e58;
-  --accent-soft: #e3f2f0;
+  --accent: #6fb337;
+  --accent-strong: #7fc246;
+  --accent-soft: #edf6e3;
+  /* Schrift auf Akzentflächen und Akzent als Textfarbe, beide kontraststark */
+  --on-accent: #1a2e0b;
+  --accent-ink: #3d7019;
   --record: #d64545;
   --danger: #b42318;
   --danger-soft: #fdecea;
@@ -21,9 +24,11 @@
     --foreground: #eef0f3;
     --muted: #9aa4b2;
     --border: #2f3540;
-    --accent: #3fb8ac;
-    --accent-strong: #63cfc4;
-    --accent-soft: #17312f;
+    --accent: #6fb337;
+    --accent-strong: #86c652;
+    --accent-soft: #1f2c17;
+    --on-accent: #14171c;
+    --accent-ink: #8fcf5c;
     --record: #ef5f5f;
     --danger: #ff8a80;
     --danger-soft: #3a1d1b;
@@ -39,6 +44,8 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
   --color-record: var(--record);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);

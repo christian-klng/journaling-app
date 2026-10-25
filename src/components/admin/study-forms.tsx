@@ -129,7 +129,7 @@ export function CreateQuestionnaireForm({ group }: { group: StudyGroup }) {
   const [state, action, pending] = useActionState(createQuestionnaire.bind(null, group.id), undefined);
   return (
     <details className="group/new rounded-xl border border-dashed border-border">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-accent [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-medium text-accent-ink [&::-webkit-details-marker]:hidden">
         + Abfrage für Gruppe {group.letter} anlegen
       </summary>
       <form action={action} className="space-y-3 border-t border-border p-3">

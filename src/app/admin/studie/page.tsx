@@ -67,7 +67,7 @@ export default async function StudyPage() {
               <ul className="divide-y divide-border rounded-xl border border-border">
                 {active.map((q, index) => (
                   <li key={q.id} className="flex items-center gap-2 px-3 py-2">
-                    <Link href={`/admin/studie/abfragen/${q.id}`} className="min-w-0 flex-1 py-1 hover:text-accent">
+                    <Link href={`/admin/studie/abfragen/${q.id}`} className="min-w-0 flex-1 py-1 hover:text-accent-ink">
                       <span className="block truncate font-medium">{q.name}</span>
                       <span className="block text-sm text-muted">
                         {formatWindow(q.opensOn, q.closesOn)} · {q.itemCount === 1 ? "1 Element" : `${q.itemCount} Elemente`}

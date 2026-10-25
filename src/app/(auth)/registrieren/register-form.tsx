@@ -88,7 +88,7 @@ export function RegisterForm({
           <span>
             Ich habe die{" "}
             {/* Neuer Tab, damit das halb ausgefüllte Formular erhalten bleibt */}
-            <a href="/datenschutz" target="_blank" className="font-medium text-accent underline underline-offset-4">
+            <a href="/datenschutz" target="_blank" className="font-medium text-accent-ink underline underline-offset-4">
               Datenschutzinformation
             </a>{" "}
             gelesen und willige ein, dass meine Antworten und Aufnahmen für die Studie gespeichert, von

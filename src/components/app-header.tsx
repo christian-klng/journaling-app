@@ -18,7 +18,7 @@ export function AppHeader({
       {/* Auf dem Handy steht die Navigation in einer eigenen Zeile unter Name und Menü */}
       <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-4 px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <Link href={home} className="text-lg font-semibold tracking-tight">
-          Journaling
+          LimeJournal
         </Link>
         {nav.length > 0 && (
           <nav className="order-last flex w-full gap-4 overflow-x-auto text-sm whitespace-nowrap sm:order-none sm:w-auto sm:flex-1">

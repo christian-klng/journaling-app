@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       </p>
       <p className="text-sm">
         Noch kein Konto?{" "}
-        <Link href="/registrieren" className="font-medium text-accent underline underline-offset-4">
+        <Link href="/registrieren" className="font-medium text-accent-ink underline underline-offset-4">
           Jetzt registrieren
         </Link>
       </p>

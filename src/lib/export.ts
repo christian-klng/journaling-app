@@ -163,7 +163,7 @@ export const PARTICIPATION_LABELS = {
   none: "",
 } as const;
 
-export const README_TEXT = `Export der Journaling-App
+export const README_TEXT = `Export der LimeJournal-App
 =========================
 
 antworten.csv
