@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
-import { MicIcon } from "@/components/study/mic-icon";
 import { PendingUploads } from "@/components/pending-uploads";
 import { AttentionDot, buttonClass, Card, Notice } from "@/components/ui";
 import { requireParticipant } from "@/lib/auth/guards";
@@ -76,7 +75,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           href={slotHref(slot)}
           className="flex w-full flex-col items-center gap-2 rounded-3xl bg-accent px-6 py-7 text-center text-on-accent transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          <MicIcon className="size-9" />
           <span className="text-xl font-semibold">
             {slot.entry ? `${slot.questionnaire.name} fortsetzen` : `${slot.questionnaire.name} starten`}
           </span>
