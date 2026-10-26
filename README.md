@@ -17,7 +17,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Der persönliche Code (z. B. KA-03-BE-A) besteht aus den ersten zwei Buchstaben des Vornamens
   der Mutter, dem Geburtsmonat, den ersten zwei Buchstaben des Geburtsortes und der Gruppe. Die
   Gruppe lässt sich bei der Registrierung oder später unter „Code und Gruppe" genau einmal selbst
-  eintragen; solange sie fehlt, blinkt ein roter Punkt.
+  eintragen; solange sie fehlt, blinkt ein roter Punkt. Ist die zufällige Zuordnung eingeschaltet,
+  teilt die App die Gruppe bei der Registrierung zu und die Person kann sofort starten.
 - Bei der Anmeldung spielen Groß- und Kleinschreibung keine Rolle, Umlaute dürfen als ae, oe, ue
   geschrieben werden.
 - Die Startseite zeigt die Abfragen der eigenen Gruppe, deren Zeitfenster gerade läuft, verpasste
@@ -38,7 +39,9 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 
 - *Studie:* Studienzeitraum, Gruppen (Buchstabe für den Code, interne Bezeichnung) und pro Gruppe
   Abfragen mit Zeitfenster, Einleitung und Fragen, jeweils Pflicht oder optional. Vorschau aus Sicht
-  der Teilnehmenden, Kopieren in eine andere Gruppe, Import und Export als JSON. Abfragen und
+  der Teilnehmenden, Kopieren in eine andere Gruppe, Import und Export als JSON. Ab zwei Gruppen
+  lässt sich die zufällige Zuordnung einschalten: Neue Teilnehmende kommen dann in die Gruppe mit
+  den wenigsten Personen, bei Gleichstand per Los, sodass alle Gruppen gleich groß bleiben. Abfragen und
   Fragen werden archiviert statt gelöscht; Textkorrekturen sind jederzeit möglich, gegebene
   Antworten behalten den Text, den die Person gesehen hat.
 - *Übersicht:* alle Teilnehmenden nach Gruppe geordnet, mit Code und Zahl der Einträge. Doppelte
@@ -65,7 +68,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 2. Den **Studienzeitraum** eintragen. Ohne ihn sehen Teilnehmende keine Fragen.
 3. Die Teilnehmenden registrieren sich und bilden dabei ihren persönlichen Code.
 4. Sobald die Gruppen feststehen, sie den Teilnehmenden mitteilen. Diese tragen sie selbst ein,
-   oder die Studienleitung weist sie in der Übersicht gesammelt über die Codes zu.
+   oder die Studienleitung weist sie in der Übersicht gesammelt über die Codes zu. Alternativ vor
+   dem Start der Registrierung die zufällige Zuordnung unter **Studie** einschalten.
 5. Während der Studie unter **Teilnahme** verfolgen, wer welche Abfrage erledigt hat.
 6. Zum Schluss alles als ZIP exportieren.
 

@@ -6,8 +6,8 @@ import { CreateGroupForm, CreateQuestionnaireForm, GroupLabelForm, ImportForm, S
 import { Button, buttonClass, Card } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth/guards";
 import { formatShortDate } from "@/lib/format";
-import { getStudyPeriod } from "@/lib/settings";
-import { deleteGroup, moveQuestionnaire, setQuestionnaireArchived } from "@/lib/study/actions";
+import { getStudyPeriod, isRandomGroupAssignmentEnabled } from "@/lib/settings";
+import { deleteGroup, moveQuestionnaire, setQuestionnaireArchived, setRandomGroupAssignment } from "@/lib/study/actions";
 import { formatWindow } from "@/lib/study/config";
 import { getStudyOverview } from "@/lib/study/queries";
 
@@ -15,7 +15,11 @@ export const metadata: Metadata = { title: "Studie" };
 
 export default async function StudyPage() {
   await requireAdmin();
-  const [groups, period] = await Promise.all([getStudyOverview(), getStudyPeriod()]);
+  const [groups, period, randomGroups] = await Promise.all([
+    getStudyOverview(),
+    getStudyPeriod(),
+    isRandomGroupAssignmentEnabled(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -40,6 +44,26 @@ export default async function StudyPage() {
         </div>
         <StudyPeriodForm start={period.start} end={period.end} />
       </Card>
+
+      {groups.length >= 2 && (
+        <Card className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="font-semibold">Zufällige Zuordnung zu einer Gruppe</h2>
+            <p className="text-sm text-muted">
+              {randomGroups
+                ? "Eingeschaltet. Neue Teilnehmende kommen bei der Registrierung in die Gruppe mit den wenigsten Personen, bei Gleichstand per Los, und können sofort starten. Selbst wählen können sie ihre Gruppe nicht."
+                : "Ausgeschaltet. Teilnehmende tragen ihre Gruppe selbst ein, oder die Studienleitung weist sie in der Übersicht zu."}{" "}
+              Bereits Registrierte behalten ihre Gruppe. Personen ohne Gruppe weist du in der Übersicht
+              zu.
+            </p>
+          </div>
+          <form action={setRandomGroupAssignment.bind(null, !randomGroups)}>
+            <Button type="submit" variant="secondary">
+              {randomGroups ? "Zufällige Zuordnung ausschalten" : "Zufällige Zuordnung einschalten"}
+            </Button>
+          </form>
+        </Card>
+      )}
 
       {groups.map((group) => {
         const active = group.questionnaires.filter((q) => !q.archivedAt);

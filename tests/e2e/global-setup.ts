@@ -9,6 +9,8 @@ import { ADMIN_LOGIN_NAME, ADMIN_NAME, PASSWORD } from "./helpers";
 export default async function globalSetup() {
   const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
   await sql`delete from login_attempts`;
+  // Ein abgebrochener Lauf könnte die zufällige Zuordnung eingeschaltet zurücklassen
+  await sql`delete from settings where key = 'random_group_assignment'`;
   await sql`
     insert into users (display_name, login_name, password_hash, role, consent_at)
     values (${ADMIN_NAME}, ${ADMIN_LOGIN_NAME}, ${await hash(PASSWORD)}, 'admin', now())

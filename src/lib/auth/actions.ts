@@ -9,6 +9,7 @@ import { studyGroups, users } from "@/lib/db/schema";
 import { CONSENT_VERSION } from "@/lib/legal";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
 import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
+import { drawGroup, isRandomGroupAssignmentActive } from "@/lib/study/group-assignment";
 import { isNameTaken, proposeName } from "./accounts";
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 import { clearAttempts, recordFailedAttempt, tooManyAttempts } from "./rate-limit";
@@ -76,28 +77,34 @@ export async function register(_state: FormState, formData: FormData): Promise<F
   };
   if (await isNameTaken(data.username)) return taken;
 
-  // Die Gruppe ist bei der Registrierung oft noch nicht bekannt und wird dann später nachgetragen
+  // Die Gruppe ist bei der Registrierung oft noch nicht bekannt und wird dann später nachgetragen,
+  // außer bei zufälliger Zuordnung: Dann lost die App sie zu und die Auswahl im Formular entfällt
+  const randomGroup = await isRandomGroupAssignmentActive();
   let studyGroupId: string | null = null;
-  if (data.groupId) {
+  if (data.groupId && !randomGroup) {
     const [group] = await db.select({ id: studyGroups.id }).from(studyGroups).where(eq(studyGroups.id, data.groupId));
     if (!group) return { error: "Diese Gruppe gibt es nicht. Bitte wähle eine andere.", fields };
     studyGroupId = group.id;
   }
 
-  const [user] = await db
-    .insert(users)
-    .values({
-      displayName: data.username,
-      loginName: normalizeLoginName(data.username),
-      passwordHash: await hashPassword(data.password),
-      role: "user",
-      codeStem: codeStemFromParts(code.data),
-      studyGroupId,
-      consentAt: new Date(),
-      consentVersion: CONSENT_VERSION,
-    })
-    .onConflictDoNothing()
-    .returning({ id: users.id });
+  const passwordHash = await hashPassword(data.password);
+  const [user] = await db.transaction(async (tx) => {
+    if (randomGroup) studyGroupId = await drawGroup(tx);
+    return tx
+      .insert(users)
+      .values({
+        displayName: data.username,
+        loginName: normalizeLoginName(data.username),
+        passwordHash,
+        role: "user",
+        codeStem: codeStemFromParts(code.data),
+        studyGroupId,
+        consentAt: new Date(),
+        consentVersion: CONSENT_VERSION,
+      })
+      .onConflictDoNothing()
+      .returning({ id: users.id });
+  });
   if (!user) return taken;
 
   await createSession(user.id);

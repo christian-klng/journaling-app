@@ -8,7 +8,7 @@ import { assertAdmin } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { questionnaireItems, questionnaires, studyGroups, users, type ItemType } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
-import { setSetting, STUDY_END_KEY, STUDY_START_KEY } from "@/lib/settings";
+import { RANDOM_GROUPS_KEY, setSetting, STUDY_END_KEY, STUDY_START_KEY } from "@/lib/settings";
 import {
   GroupLabelSchema,
   ITEM_TYPES,
@@ -63,6 +63,13 @@ export async function updateGroupLabel(groupId: string, _state: ActionState, for
 
   await db.update(studyGroups).set({ label: label.data }).where(eq(studyGroups.id, groupId));
   return done();
+}
+
+/** Schaltet die zufällige Zuordnung neuer Teilnehmender zu einer der Gruppen ein oder aus. */
+export async function setRandomGroupAssignment(enabled: boolean) {
+  await assertAdmin();
+  await setSetting(RANDOM_GROUPS_KEY, String(enabled));
+  revalidatePath("/admin/studie");
 }
 
 /** Nur leere Gruppen lassen sich löschen: ohne Abfragen (auch archivierte) und ohne Personen. */

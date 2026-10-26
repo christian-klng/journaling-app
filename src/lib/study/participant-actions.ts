@@ -12,6 +12,7 @@ import { studyGroups, users } from "@/lib/db/schema";
 import { isUuid } from "@/lib/entries";
 import { CodePartsSchema, codeStemFromParts } from "./code";
 import { deleteParticipantAccount } from "./delete-account";
+import { isRandomGroupAssignmentActive } from "./group-assignment";
 
 /** Für Konten, die vor dem persönlichen Code entstanden sind. Danach korrigieren ihn nur Admins. */
 export async function saveOwnCode(_state: FormState, formData: FormData): Promise<FormState> {
@@ -37,6 +38,7 @@ export async function setOwnGroup(_state: FormState, formData: FormData): Promis
   const user = await assertUser();
   const groupId = formData.get("groupId");
   if (!isUuid(groupId)) return { error: "Bitte wähle deine Gruppe." };
+  if (await isRandomGroupAssignmentActive()) return { error: "Deine Gruppe trägt die Studienleitung ein." };
 
   const [group] = await db.select({ id: studyGroups.id }).from(studyGroups).where(eq(studyGroups.id, groupId));
   if (!group) return { error: "Diese Gruppe gibt es nicht." };

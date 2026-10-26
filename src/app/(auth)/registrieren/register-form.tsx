@@ -8,9 +8,11 @@ import { register, suggestName, type FormState } from "@/lib/auth/actions";
 export function RegisterForm({
   proposedName,
   groups,
+  randomGroup,
 }: {
   proposedName: string;
   groups: { id: string; letter: string }[];
+  randomGroup: boolean;
 }) {
   const [name, setName] = useState(proposedName);
   const [suggesting, startSuggesting] = useTransition();
@@ -66,7 +68,7 @@ export function RegisterForm({
           className={inputClass}
         />
       </Field>
-      <CodeFields defaults={state?.fields} />
+      <CodeFields defaults={state?.fields} randomGroup={randomGroup} />
       {groups.length > 0 && (
         <Field
           label="Deine Gruppe"

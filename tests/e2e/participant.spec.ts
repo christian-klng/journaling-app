@@ -68,6 +68,31 @@ test("Die Gruppe lässt sich schon bei der Registrierung wählen", async ({ page
   await expect(page.getByText("Gruppe Y", { exact: true })).toBeVisible();
 });
 
+test("Bei zufälliger Zuordnung bekommen neue Teilnehmende sofort eine Gruppe", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/admin/studie");
+  await page.getByRole("button", { name: "Zufällige Zuordnung einschalten" }).click();
+  await expect(page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" })).toBeVisible();
+  await logout(page);
+
+  try {
+    await page.goto("/registrieren");
+    await expect(page.getByLabel("Deine Gruppe")).toHaveCount(0);
+    const code = randomCodeStem();
+    await register(page, { codeStem: code });
+    await expect(page.getByText("Deine Gruppe fehlt noch.")).toHaveCount(0);
+    await expect(page.getByText(new RegExp(`dein persönlicher Code ist ${code}-[A-Z]`))).toBeVisible();
+    await page.goto("/profil");
+    await expect(page.getByText("Noch nicht eingetragen")).toHaveCount(0);
+    await logout(page);
+  } finally {
+    await loginAsAdmin(page);
+    await page.goto("/admin/studie");
+    await page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" }).click();
+    await expect(page.getByRole("button", { name: "Zufällige Zuordnung einschalten" })).toBeVisible();
+  }
+});
+
 test("Admin sieht den Code und ändert die Gruppe", async ({ page }) => {
   await loginAsAdmin(page);
   const row = page.getByRole("link", { name: new RegExp(userName) });

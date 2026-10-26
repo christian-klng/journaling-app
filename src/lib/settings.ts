@@ -39,3 +39,10 @@ export async function getStudyPeriod() {
   const [start, end] = await Promise.all([getSetting(STUDY_START_KEY), getSetting(STUDY_END_KEY)]);
   return { start: start || null, end: end || null };
 }
+
+export const RANDOM_GROUPS_KEY = "random_group_assignment";
+
+/** Zufällige Zuordnung neuer Teilnehmender zu einer Gruppe; ohne Eintrag ausgeschaltet. */
+export async function isRandomGroupAssignmentEnabled() {
+  return (await getSetting(RANDOM_GROUPS_KEY)) === "true";
+}

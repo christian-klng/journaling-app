@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { studyGroups } from "@/lib/db/schema";
 import { formatCode } from "@/lib/study/code";
+import { isRandomGroupAssignmentActive } from "@/lib/study/group-assignment";
 import { CodeForm, GroupForm } from "./profile-forms";
 
 export const metadata: Metadata = { title: "Code und Gruppe" };
@@ -26,8 +27,9 @@ export default async function ProfilePage() {
   const [group] = user.studyGroupId
     ? await db.select({ letter: studyGroups.letter }).from(studyGroups).where(eq(studyGroups.id, user.studyGroupId))
     : [];
-  // Nur die Buchstaben; die interne Bezeichnung der Gruppen bleibt den Admins vorbehalten
-  const groups = group
+  // Nur die Buchstaben; die interne Bezeichnung der Gruppen bleibt den Admins vorbehalten.
+  // Bei zufälliger Zuordnung wählt niemand selbst, die Studienleitung trägt die Gruppe nach.
+  const groups = group || (await isRandomGroupAssignmentActive())
     ? []
     : await db.select({ id: studyGroups.id, letter: studyGroups.letter }).from(studyGroups).orderBy(asc(studyGroups.letter));
 

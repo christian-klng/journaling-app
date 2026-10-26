@@ -6,6 +6,7 @@ import {
   formatCode,
   parseCodeStem,
   parseGroupAssignments,
+  pickBalancedGroup,
 } from "@/lib/study/code";
 
 describe("Persönlicher Code", () => {
@@ -78,5 +79,28 @@ describe("Sammelzuweisung", () => {
   it("meldet unlesbare Zeilen mit Zeilennummer", () => {
     const { invalid } = parseGroupAssignments("KA-03-BE A\nMax Mustermann\nKA-3-BE A");
     expect(invalid.map((i) => i.line)).toEqual([2, 3]);
+  });
+});
+
+describe("Zufällige Zuordnung", () => {
+  const groups = [
+    { id: "A", members: 3 },
+    { id: "B", members: 2 },
+    { id: "C", members: 2 },
+  ];
+
+  it("lost nur unter den kleinsten Gruppen", () => {
+    expect(pickBalancedGroup(groups, () => 0)?.id).toBe("B");
+    expect(pickBalancedGroup(groups, () => 0.99)?.id).toBe("C");
+  });
+
+  it("hält die Gruppen bei jeder Zahl von Gruppen gleich groß", () => {
+    const five = ["A", "B", "C", "D", "E"].map((id) => ({ id, members: 0 }));
+    for (let i = 0; i < 23; i++) pickBalancedGroup(five)!.members++;
+    expect(five.map((g) => g.members).sort()).toEqual([4, 4, 5, 5, 5]);
+  });
+
+  it("gibt ohne Gruppen nichts zurück", () => {
+    expect(pickBalancedGroup([])).toBeNull();
   });
 });

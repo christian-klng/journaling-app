@@ -86,3 +86,14 @@ export function parseGroupAssignments(text: string) {
 
   return { assignments, invalid };
 }
+
+/**
+ * Wählt für die zufällige Zuordnung eine der Gruppen mit den wenigsten Personen, bei Gleichstand
+ * per Los. So bleiben die Gruppen gleich groß, auch nachdem Admins umgruppiert oder Konten gelöscht haben.
+ */
+export function pickBalancedGroup<T extends { members: number }>(groups: T[], random = Math.random): T | null {
+  if (groups.length === 0) return null;
+  const fewest = Math.min(...groups.map((group) => group.members));
+  const candidates = groups.filter((group) => group.members === fewest);
+  return candidates[Math.floor(random() * candidates.length)];
+}
