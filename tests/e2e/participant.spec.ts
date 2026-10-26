@@ -171,7 +171,9 @@ test("Teilnehmende beenden ihre Teilnahme selbst, die Studienleitung erfährt Na
   await completeQuestionnaire(page);
 
   await page.getByRole("button", { name: /Menü für/ }).click();
-  await page.getByRole("menuitem", { name: "Teilnahme beenden" }).click();
+  await expect(page.getByRole("menuitem", { name: "Teilnahme beenden" })).toHaveCount(0);
+  await page.goto("/datenschutz");
+  await page.getByRole("link", { name: "„Teilnahme beenden“" }).click();
   await page.getByLabel("Zur Bestätigung dein Passwort").fill("falsch-falsch");
   await page.getByRole("button", { name: "Konto und Einträge löschen" }).click();
   await expect(page.getByText("Das Passwort stimmt nicht.")).toBeVisible();

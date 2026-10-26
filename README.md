@@ -31,7 +31,8 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Bei der Registrierung willigen Teilnehmende nach der Datenschutzinformation ein und bestätigen,
   dass sie volljährig sind. Gespeichert werden Zeitpunkt und Fassung der Einwilligung.
 - Unter „Teilnahme beenden“ widerrufen Teilnehmende ihre Einwilligung: Nach Eingabe des Passworts
-  sind Konto, Einträge und Audiodateien sofort gelöscht.
+  sind Konto, Einträge und Audiodateien sofort gelöscht. Die Seite steht bewusst nicht im Menü,
+  sondern ist über die Datenschutzinformation verlinkt.
 
 **Studienleitung (Admins)**
 

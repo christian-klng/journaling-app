@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CONSENT_VERSION, LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "Datenschutz" };
@@ -159,8 +160,9 @@ export default function PrivacyPage() {
           dahin verarbeitet wurde, bleibt rechtmäßig.
         </p>
         <p>
-          Deine Einträge siehst du jederzeit in der App. Zum Widerruf wählst du im Menü „Teilnahme
-          beenden“: Dein Konto, deine Einträge und Aufnahmen werden sofort gelöscht. Die Studienleitung
+          Deine Einträge siehst du jederzeit in der App. Zum Widerruf öffnest du angemeldet die Seite{" "}
+          <Link href="/teilnahme-beenden">„Teilnahme beenden“</Link>: Dein Konto, deine Einträge und
+          Aufnahmen werden sofort gelöscht. Die Studienleitung
           erfährt dabei nur deinen Fantasienamen und Code, damit sie dich auch aus bereits exportierten
           Daten entfernt. Was schon anonymisiert in Ergebnisse eingeflossen ist, lässt sich nicht mehr
           dir zuordnen und bleibt bestehen.
