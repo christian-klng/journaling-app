@@ -1,12 +1,12 @@
-// Angaben für Datenschutzinformation, Impressum und Einwilligung. Die Texte stehen in
+// Angaben für Datenschutzinformation, Studienbedingungen, Impressum und Einwilligung. Die Texte stehen in
 // src/app/(public)/; hier nur, was sich je Studie ändert. Was noch offen ist, bleibt null und
 // erscheint dann nicht auf den Seiten.
 
 /**
- * Fassung der Einwilligung. Bei jeder inhaltlichen Änderung des Einwilligungstextes oder der
- * Datenschutzinformation erhöhen; gespeichert wird sie bei der Registrierung.
+ * Fassung der Einwilligung. Bei jeder inhaltlichen Änderung des Einwilligungstextes, der
+ * Datenschutzinformation oder der Studienbedingungen erhöhen; gespeichert wird sie bei der Registrierung.
  */
-export const CONSENT_VERSION = "2";
+export const CONSENT_VERSION = "3";
 
 type Person = { name: string; role: string };
 

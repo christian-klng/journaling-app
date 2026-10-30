@@ -4,8 +4,8 @@ import { CONSENT_VERSION, LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "Datenschutz" };
 
-// Inhaltlich gleich mit dem Informationsschreiben, das Teilnehmende vor der Studie bekommen.
-// Bei inhaltlichen Änderungen CONSENT_VERSION erhöhen.
+// Inhaltlich gleich mit dem Informationsschreiben, das Teilnehmende vor der Studie bekommen. Wie die
+// Studie abläuft, steht nur in den Studienbedingungen. Bei inhaltlichen Änderungen CONSENT_VERSION erhöhen.
 export default function PrivacyPage() {
   const { controller, dataProtectionOfficer: dpo, studyLead, supervisor, operator, supervisoryAuthority } = LEGAL;
 
@@ -18,16 +18,6 @@ export default function PrivacyPage() {
           Fassung {CONSENT_VERSION}.
         </p>
       </header>
-
-      <section>
-        <h2>Worum es geht</h2>
-        <p>
-          Mit dieser App hältst du während der Studie regelmäßig fest, wie deine Projekt- oder
-          Gründungsarbeit läuft: mit kurzen Skalen und gesprochenen Antworten. Die Aufnahmen werden
-          automatisch verschriftlicht. Die Studienleitung wertet alles wissenschaftlich aus.
-          {LEGAL.purpose && ` ${LEGAL.purpose}`}
-        </p>
-      </section>
 
       <section>
         <h2>Verantwortlich</h2>
@@ -86,25 +76,19 @@ export default function PrivacyPage() {
         </p>
         <p>
           Was du in deinen Aufnahmen erzählst, bestimmst du selbst. Stimme und Inhalt können Hinweise
-          auf deine Person geben. Bitte nenne keine Namen anderer Personen und erzähle nichts über deren
-          Gesundheit oder andere persönliche Dinge.
+          auf deine Person geben.
         </p>
       </section>
 
       <section>
         <h2>Zweck und Rechtsgrundlage</h2>
         <p>
-          Die Daten dienen ausschließlich diesem Forschungsprojekt. Rechtsgrundlage ist deine
+          Die Daten dienen ausschließlich diesem Forschungsprojekt, das die Studienleitung
+          wissenschaftlich auswertet. Worum es darin geht und wie die Teilnahme abläuft, steht in den{" "}
+          <Link href="/studienbedingungen">Studienbedingungen</Link>. Rechtsgrundlage ist deine
           Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Sprichst du in deinen Aufnahmen von dir aus über
           Gesundheit, religiöse oder politische Überzeugungen oder andere besonders geschützte Themen,
           gilt dafür deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO).
-        </p>
-        <p>
-          Die Teilnahme ist freiwillig. Ob du teilnimmst, was du antwortest oder ob du aufhörst, hat
-          keinen Einfluss auf deine Noten oder dein Studium. Die Studienleitung sieht nur Fantasienamen
-          und Codes. Weil sie die Aufnahmen anhört, kann sie Stimmen unter Umständen erkennen. Sie
-          nutzt die Daten dennoch nie für Bewertungen. Mit der Auswertung beginnt sie erst, wenn die
-          Leistungen in der Lehrveranstaltung bewertet sind.
         </p>
       </section>
 

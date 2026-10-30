@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-/** Seiten, die ohne Anmeldung erreichbar sind: Datenschutzinformation und Impressum. */
+/** Seiten, die ohne Anmeldung erreichbar sind: Studienbedingungen, Datenschutzinformation und Impressum. */
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">

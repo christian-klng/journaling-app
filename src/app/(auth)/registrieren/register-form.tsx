@@ -101,7 +101,13 @@ export function RegisterForm({
         </label>
         <label className="flex items-start gap-3">
           <input type="checkbox" name="adult" required className="mt-0.5 size-5 shrink-0 accent-accent" />
-          <span>Ich bin mindestens 18 Jahre alt und nehme freiwillig teil.</span>
+          <span>
+            Ich habe die{" "}
+            <a href="/studienbedingungen" target="_blank" className="font-medium text-accent-ink underline underline-offset-4">
+              Studienbedingungen
+            </a>{" "}
+            gelesen, bin mindestens 18 Jahre alt und nehme freiwillig teil.
+          </span>
         </label>
       </div>
       <ErrorMessage>{state?.error}</ErrorMessage>

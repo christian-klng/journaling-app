@@ -35,7 +35,7 @@ const RegisterSchema = z.object({
   passwordRepeat: z.string(),
   groupId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
-  adult: z.literal("on", "Teilnehmen kannst du nur, wenn du mindestens 18 Jahre alt bist."),
+  adult: z.literal("on", "Bitte bestätige die Studienbedingungen. Teilnehmen kannst du nur, wenn du mindestens 18 Jahre alt bist."),
 });
 
 export async function register(_state: FormState, formData: FormData): Promise<FormState> {
