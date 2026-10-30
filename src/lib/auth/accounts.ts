@@ -19,6 +19,18 @@ export function proposeName() {
   return generateUniqueName(isNameTaken, randomInt);
 }
 
+/** So viele Fantasienamen stehen bei der Registrierung zur Auswahl. */
+export const NAME_CHOICES = 3;
+
+/** Mehrere verschiedene freie Fantasienamen zur Auswahl bei der Registrierung. */
+export async function proposeNames(count = NAME_CHOICES) {
+  const names: string[] = [];
+  while (names.length < count) {
+    names.push(await generateUniqueName(async (name) => names.includes(name) || isNameTaken(name), randomInt));
+  }
+  return names;
+}
+
 /**
  * Legt ein Admin-Konto mit Fantasienamen und Einmal-Passwort an. Das Passwort wird nur hier
  * zurückgegeben; bei der ersten Anmeldung muss ein eigenes vergeben werden.

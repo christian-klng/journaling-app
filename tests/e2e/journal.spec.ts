@@ -42,17 +42,21 @@ test("Nutzer registriert sich mit einem Fantasienamen als Benutzernamen", async 
 
 test("Die Registrierung nimmt nur vorgeschlagene Namen an", async ({ page }) => {
   await page.goto("/registrieren");
-  const field = page.getByLabel("Dein Benutzername");
-  const proposed = await field.inputValue();
+  const choices = page.getByRole("group", { name: "Dein Benutzername" }).getByRole("radio");
+  await expect(choices).toHaveCount(3);
+  await expect(choices.first()).toBeChecked();
+  const proposed = await choices.first().inputValue();
 
-  await page.getByRole("button", { name: "Anderen Namen vorschlagen" }).click();
-  await expect(field).not.toHaveValue(proposed);
+  await page.getByRole("button", { name: "Andere Namen vorschlagen" }).click();
+  await expect(choices.first()).not.toHaveValue(proposed);
+  await expect(choices.first()).toBeChecked();
 
-  // Das Feld ist schreibgeschützt; wer es im Browser umgeht, bekommt einen neuen Vorschlag
-  await field.evaluate((input: HTMLInputElement) => {
-    input.removeAttribute("readonly");
-    input.value = "Max Mustermann";
-  });
+  await choices.nth(1).check({ force: true });
+  await expect(choices.nth(1)).toBeChecked();
+
+  // Wer im Browser einen eigenen Namen einschmuggelt, bekommt einen neuen Vorschlag
+  const field = page.getByRole("radio", { checked: true });
+  await field.evaluate((input: HTMLInputElement) => (input.value = "Max Mustermann"));
   await page.getByLabel("Passwort", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Passwort wiederholen").fill(PASSWORD);
   await page.getByLabel("Vornamens deiner Mutter").fill("KA");
@@ -60,8 +64,8 @@ test("Die Registrierung nimmt nur vorgeschlagene Namen an", async ({ page }) => 
   await page.getByLabel("Geburtsortes").fill("BE");
   for (const checkbox of await page.getByRole("checkbox").all()) await checkbox.check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
-  await expect(page.getByText("Bitte nimm den vorgeschlagenen Namen.")).toBeVisible();
-  await expect(field).not.toHaveValue("Max Mustermann");
+  await expect(page.getByText("Bitte nimm einen der vorgeschlagenen Namen.")).toBeVisible();
+  await expect(page.getByRole("radio", { checked: true })).not.toHaveValue("Max Mustermann");
 });
 
 test("Nutzer füllt eine Abfrage aus und sieht seine Antworten", async ({ page }) => {

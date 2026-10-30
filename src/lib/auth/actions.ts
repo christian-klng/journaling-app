@@ -10,7 +10,7 @@ import { CONSENT_VERSION } from "@/lib/legal";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
 import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
 import { drawGroup, isRandomGroupAssignmentActive } from "@/lib/study/group-assignment";
-import { isNameTaken, proposeName } from "./accounts";
+import { isNameTaken, proposeName, proposeNames } from "./accounts";
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 import { clearAttempts, recordFailedAttempt, tooManyAttempts } from "./rate-limit";
 import { createSession, destroyAllSessions, destroySession, getSessionUser } from "./session";
@@ -69,7 +69,7 @@ export async function register(_state: FormState, formData: FormData): Promise<F
 
   // Nur vorgeschlagene Fantasienamen, damit niemand seinen echten Namen einträgt
   if (!isGeneratedName(data.username)) {
-    return { error: "Bitte nimm den vorgeschlagenen Namen.", fields: { ...fields, username: await proposeName() } };
+    return { error: "Bitte nimm einen der vorgeschlagenen Namen.", fields: { ...fields, username: await proposeName() } };
   }
   const taken = {
     error: "Dieser Name wurde gerade an jemand anderen vergeben. Hier ist ein neuer Vorschlag.",
@@ -154,8 +154,8 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
 }
 
 /** Neuer Vorschlag für die Registrierung, wenn der Name nicht gefällt. */
-export async function suggestName() {
-  return proposeName();
+export async function suggestNames() {
+  return proposeNames();
 }
 
 export async function logout() {

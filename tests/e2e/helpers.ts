@@ -30,7 +30,8 @@ export async function register(page: Page, options: { codeStem?: string; group?:
   const [mother, month, birthplace] = (options.codeStem ?? randomCodeStem()).split("-");
   await resetRegistrationLimit();
   await page.goto("/registrieren");
-  const name = await page.getByLabel("Dein Benutzername").inputValue();
+  // Der erste der vorgeschlagenen Namen ist vorausgewählt
+  const name = await page.getByRole("radio", { checked: true }).inputValue();
   await page.getByLabel("Passwort", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Passwort wiederholen").fill(PASSWORD);
   await page.getByLabel("Vornamens deiner Mutter").fill(mother.toLowerCase());

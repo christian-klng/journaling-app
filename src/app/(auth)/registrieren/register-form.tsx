@@ -3,51 +3,80 @@
 import { useActionState, useState, useTransition } from "react";
 import { CodeFields } from "@/components/study/code-fields";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
-import { register, suggestName, type FormState } from "@/lib/auth/actions";
+import { register, suggestNames, type FormState } from "@/lib/auth/actions";
 
 export function RegisterForm({
-  proposedName,
+  proposedNames,
   groups,
   randomGroup,
 }: {
-  proposedName: string;
+  proposedNames: string[];
   groups: { id: string; letter: string }[];
   randomGroup: boolean;
 }) {
-  const [name, setName] = useState(proposedName);
+  const [names, setNames] = useState(proposedNames);
+  const [name, setName] = useState(proposedNames[0]);
   const [suggesting, startSuggesting] = useTransition();
   const [state, action, pending] = useActionState(async (previous: FormState, formData: FormData) => {
     const result = await register(previous, formData);
-    // Bei einem vergebenen Namen schickt der Server gleich einen neuen Vorschlag mit
-    if (result?.fields?.username) setName(result.fields.username);
+    // Bei einem vergebenen Namen schickt der Server gleich einen neuen Vorschlag mit; er ersetzt den
+    // gewählten Namen und ist sofort ausgewählt
+    const submitted = formData.get("username");
+    const proposed = result?.fields?.username;
+    if (proposed && proposed !== submitted) {
+      setNames((current) =>
+        current.includes(proposed)
+          ? current
+          : current.includes(String(submitted))
+            ? current.map((n) => (n === submitted ? proposed : n))
+            : [proposed, ...current.slice(1)],
+      );
+      setName(proposed);
+    }
     return result;
   }, undefined);
 
   return (
     <form action={action} className="space-y-4">
-      <div className="space-y-1.5">
-        <Field
-          label="Dein Benutzername"
-          hint="Ein zufälliger Fantasiename. Mit ihm meldest du dich an, notiere ihn dir."
-        >
-          <input
-            name="username"
-            value={name}
-            readOnly
-            autoComplete="username"
-            className={`${inputClass} border-transparent bg-accent-soft text-lg font-semibold`}
-          />
-        </Field>
+      <fieldset className="space-y-1.5">
+        <legend className="mb-1.5 text-sm font-medium">Dein Benutzername</legend>
+        <div className="flex flex-wrap gap-2">
+          {names.map((n) => (
+            <label
+              key={n}
+              className="cursor-pointer rounded-full border border-border bg-surface px-4 py-2 font-medium transition-colors hover:bg-accent-soft has-checked:border-accent has-checked:bg-accent-soft has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
+            >
+              <input
+                type="radio"
+                name="username"
+                value={n}
+                checked={n === name}
+                onChange={() => setName(n)}
+                className="sr-only"
+              />
+              {n}
+            </label>
+          ))}
+        </div>
+        <p className="text-sm text-muted">
+          Mit diesem Namen meldest du dich an, notiere ihn dir.
+        </p>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           disabled={suggesting}
-          onClick={() => startSuggesting(async () => setName(await suggestName()))}
+          onClick={() =>
+            startSuggesting(async () => {
+              const fresh = await suggestNames();
+              setNames(fresh);
+              setName(fresh[0]);
+            })
+          }
         >
-          {suggesting ? "Neuer Name …" : "Anderen Namen vorschlagen"}
+          {suggesting ? "Neue Namen …" : "Andere Namen vorschlagen"}
         </Button>
-      </div>
+      </fieldset>
       <Field label="Passwort" hint="Mindestens 8 Zeichen">
         <input
           name="password"
