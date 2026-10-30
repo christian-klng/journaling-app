@@ -15,10 +15,11 @@ function client() {
   });
 }
 
-// Cortecs-eigene Routing-Parameter: nur Anbieter in der EU, Ausweichmodell bei Ausfall
+// Cortecs-eigene Routing-Parameter: nur Anbieter in der EU und kein Ausweichmodell, weil die
+// Datenschutzinformation Whisper nennt. Fällt Whisper aus, nimmt die Pipeline die Aufnahme später wieder auf.
 const routing = () => ({
   eu_native: process.env.CORTECS_EU_NATIVE !== "false",
-  enable_model_fallback: true,
+  enable_model_fallback: false,
 });
 
 /**
