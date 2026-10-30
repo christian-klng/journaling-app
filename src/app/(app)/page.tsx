@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { PendingUploads } from "@/components/pending-uploads";
-import { AttentionDot, buttonClass, Card, Notice } from "@/components/ui";
+import { AttentionDot, Button, Card, Notice } from "@/components/ui";
 import { requireParticipant } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { studyGroups } from "@/lib/db/schema";
@@ -106,11 +106,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </p>
       )}
 
-      {schedule.makeUp.length > 0 && (
+      {schedule.missed.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted">Nachholen</h2>
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium text-muted">Verpasst</h2>
+            <p className="text-sm text-muted">Abfragen lassen sich nur in ihrem Zeitfenster ausfüllen.</p>
+          </div>
           <ul className="space-y-2">
-            {schedule.makeUp.map((slot) => (
+            {schedule.missed.map((slot) => (
               <li key={`${slot.questionnaire.id}-${slot.weekStart}`}>
                 <Card className="flex items-center justify-between gap-3">
                   <span>
@@ -119,9 +122,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                     </span>
                     <span className="block text-sm text-muted">{formatRange(slot.from, slot.to)}</span>
                   </span>
-                  <Link href={slotHref(slot)} className={`${buttonClass("secondary", "sm")} shrink-0`}>
+                  <Button variant="secondary" size="sm" className="shrink-0 disabled:hover:bg-surface" disabled>
                     {slot.entry ? "Fortsetzen" : "Nachholen"}
-                  </Link>
+                  </Button>
                 </Card>
               </li>
             ))}

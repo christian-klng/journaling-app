@@ -39,7 +39,7 @@ export default async function StudyPage() {
               ? `${formatShortDate(period.start)} bis ${formatShortDate(period.end)}. `
               : "Noch nicht festgelegt. "}
             Woche 1 beginnt am Montag der Woche, in die der Start fällt. Abfragen sind nur in diesem
-            Zeitraum fällig und lassen sich nur dafür nachholen.
+            Zeitraum fällig und lassen sich nur in ihrem Zeitfenster ausfüllen, nicht nachholen.
           </p>
         </div>
         <StudyPeriodForm start={period.start} end={period.end} />

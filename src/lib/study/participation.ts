@@ -3,11 +3,11 @@ import { buildSlots, mondayOf, weekNumber } from "./schedule";
 export type ParticipationStatus =
   /** Im Zeitfenster abgeschlossen */
   | "done"
-  /** Nach dem Zeitfenster abgeschlossen */
+  /** Nach dem Zeitfenster abgeschlossen, als Nachholen noch möglich war */
   | "late"
   /** Begonnen, aber nicht abgeschlossen */
   | "started"
-  /** Zeitfenster vorbei, nichts abgegeben; lässt sich noch nachholen */
+  /** Zeitfenster vorbei, nichts abgegeben */
   | "missed"
   /** Zeitfenster läuft gerade */
   | "open"

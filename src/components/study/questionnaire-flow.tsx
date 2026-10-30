@@ -27,7 +27,7 @@ export function QuestionnaireFlow({
   initialCounts,
 }: {
   questionnaire: { id: string; name: string; intro: string };
-  slot: { weekStart: string; weekNumber: number; range: string; late: boolean };
+  slot: { weekStart: string; weekNumber: number; range: string };
   items: FlowItem[];
   initialEntryId: string | null;
   initialValues: Record<string, number>;
@@ -95,7 +95,6 @@ export function QuestionnaireFlow({
     <div className="space-y-1">
       <p className="text-sm text-muted">
         Woche {slot.weekNumber} · {slot.range}
-        {slot.late && " · wird nachgeholt"}
       </p>
       <h1 className="text-xl font-semibold">{questionnaire.name}</h1>
     </div>

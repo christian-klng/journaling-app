@@ -20,13 +20,13 @@ export function activeQuestionnaires(groupId: string) {
 }
 
 /**
- * Was eine Person gerade ausfüllen kann: offene Abfragen der laufenden Woche, verpasste zum
- * Nachholen und die nächste, die noch kommt. Ohne Gruppe oder Studienzeitraum gibt es nichts.
+ * Was eine Person gerade ausfüllen kann: offene Abfragen der laufenden Woche, dazu die verpassten
+ * (nur zur Anzeige, nachholen lässt sich nichts) und die nächste, die noch kommt. Ohne Gruppe oder Studienzeitraum gibt es nichts.
  */
 export async function getParticipantSchedule(user: User, now = new Date()) {
   const period = await getStudyPeriod();
   const today = berlinDate(now);
-  const empty = { period, today, slots: [] as ParticipantSlot[], open: [], makeUp: [], next: null };
+  const empty = { period, today, slots: [] as ParticipantSlot[], open: [], missed: [], next: null };
   if (!user.studyGroupId || !period.start || !period.end) return empty;
 
   const [list, own] = await Promise.all([
@@ -53,8 +53,8 @@ export async function getParticipantSchedule(user: User, now = new Date()) {
     today,
     slots,
     open: slots.filter((s) => s.state === "open" && notDone(s)),
-    // Die jüngsten zuerst, die sind meist noch am besten in Erinnerung
-    makeUp: slots.filter((s) => s.state === "past" && notDone(s)).reverse(),
+    // Die jüngsten zuerst
+    missed: slots.filter((s) => s.state === "past" && notDone(s)).reverse(),
     next,
   };
 }

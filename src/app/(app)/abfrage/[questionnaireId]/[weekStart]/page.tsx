@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { QuestionnaireFlow } from "@/components/study/questionnaire-flow";
+import { Card } from "@/components/ui";
 import { requireParticipant } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { answers, questionnaireItems, questionnaires, recordings } from "@/lib/db/schema";
@@ -22,6 +23,22 @@ export default async function QuestionnairePage({ params }: PageProps<"/abfrage/
   const slot = findSlot(schedule.slots, questionnaireId, weekStart);
   if (!slot || slot.state === "upcoming") notFound();
   if (slot.entry?.completedAt) redirect(`/eintraege/${slot.entry.id}`);
+  if (slot.state === "past") {
+    return (
+      <div className="space-y-6">
+        <Link href="/" className="text-sm text-muted hover:text-foreground">
+          ← Startseite
+        </Link>
+        <Card className="space-y-1 text-center">
+          <p className="font-semibold">Das Zeitfenster ist vorbei.</p>
+          <p className="text-sm text-muted">
+            Woche {slot.weekNumber} · {formatRange(slot.from, slot.to)}. Abfragen lassen sich nur in ihrem
+            Zeitfenster ausfüllen.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   const [[questionnaire], items, given, recorded] = await Promise.all([
     db
@@ -62,7 +79,6 @@ export default async function QuestionnairePage({ params }: PageProps<"/abfrage/
           weekStart,
           weekNumber: slot.weekNumber,
           range: formatRange(slot.from, slot.to),
-          late: slot.state === "past",
         }}
         items={items}
         initialEntryId={slot.entry?.id ?? null}

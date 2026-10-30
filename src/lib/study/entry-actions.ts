@@ -19,14 +19,17 @@ async function participant() {
   return user as User & { studyGroupId: string };
 }
 
-/** Eigener, noch nicht abgeschlossener Eintrag einer Abfrage. */
-async function openEntry(entryId: string, userId: string) {
+/** Eigener, noch nicht abgeschlossener Eintrag einer Abfrage, deren Zeitfenster gerade läuft. */
+async function openEntry(entryId: string, user: User) {
   if (!isUuid(entryId)) return null;
   const [entry] = await db
     .select()
     .from(entries)
-    .where(and(eq(entries.id, entryId), eq(entries.userId, userId), isNull(entries.completedAt)));
-  return entry?.questionnaireId ? entry : null;
+    .where(and(eq(entries.id, entryId), eq(entries.userId, user.id), isNull(entries.completedAt)));
+  if (!entry?.questionnaireId || !entry.weekStart) return null;
+  const schedule = await getParticipantSchedule(user);
+  const slot = findSlot(schedule.slots, entry.questionnaireId, entry.weekStart);
+  return slot?.state === "open" ? entry : null;
 }
 
 /**
@@ -37,8 +40,8 @@ export async function startEntry(questionnaireId: string, weekStart: string): Pr
   const user = await participant();
   const schedule = await getParticipantSchedule(user);
   const slot = findSlot(schedule.slots, questionnaireId, weekStart);
-  if (!slot || slot.state === "upcoming") return { error: "Diese Abfrage ist gerade nicht verfügbar." };
-  if (slot.entry?.completedAt) return { error: "Diese Abfrage hast du schon abgeschlossen." };
+  if (slot?.entry?.completedAt) return { error: "Diese Abfrage hast du schon abgeschlossen." };
+  if (!slot || slot.state !== "open") return { error: "Diese Abfrage ist gerade nicht verfügbar." };
   if (slot.entry) return { entryId: slot.entry.id };
 
   const [created] = await db
@@ -48,7 +51,6 @@ export async function startEntry(questionnaireId: string, weekStart: string): Pr
       questionnaireId,
       weekStart,
       studyGroupId: user.studyGroupId,
-      late: slot.state === "past",
     })
     .onConflictDoNothing()
     .returning({ id: entries.id });
@@ -65,7 +67,7 @@ export async function startEntry(questionnaireId: string, weekStart: string): Pr
 /** Speichert einen Skalenwert. Ohne Wert wird eine frühere Antwort entfernt (optionale Fragen). */
 export async function saveAnswer(entryId: string, itemId: string, value: number | null): Promise<Result> {
   const user = await participant();
-  const entry = await openEntry(entryId, user.id);
+  const entry = await openEntry(entryId, user);
   if (!entry || !isUuid(itemId)) return { error: "Dieser Eintrag lässt sich nicht mehr bearbeiten." };
 
   const [item] = await db
@@ -95,7 +97,7 @@ export async function saveAnswer(entryId: string, itemId: string, value: number 
 /** Schließt den Eintrag ab, wenn alle Pflichtfragen beantwortet sind. */
 export async function completeEntry(entryId: string): Promise<Result> {
   const user = await participant();
-  const entry = await openEntry(entryId, user.id);
+  const entry = await openEntry(entryId, user);
   if (!entry) return { error: "Dieser Eintrag lässt sich nicht mehr abschließen." };
 
   const [items, given, recorded] = await Promise.all([

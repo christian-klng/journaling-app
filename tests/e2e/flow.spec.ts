@@ -11,6 +11,7 @@ import {
   SMILEY_QUESTION,
   useFakeMicrophone,
 } from "./helpers";
+import { addDays, berlinDate, mondayOf } from "../../src/lib/study/schedule";
 
 let userName = "";
 
@@ -32,12 +33,13 @@ test("Ohne Gruppe gibt es keine Fragen", async ({ page }) => {
   await expect(page.getByRole("link", { name: new RegExp(FLOW_QUESTIONNAIRE) })).toHaveCount(0);
 });
 
-test("Die Startseite zeigt die offene Abfrage und die verpasste zum Nachholen", async ({ page }) => {
+test("Die Startseite zeigt die offene Abfrage und die verpasste ausgegraut", async ({ page }) => {
   userName = await register(page, { group: FLOW_GROUP });
   await expect(page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) })).toBeVisible();
-  const makeUp = page.locator("section").filter({ has: page.getByRole("heading", { name: "Nachholen" }) });
-  await expect(makeUp).toContainText(`Woche 1 · ${FLOW_QUESTIONNAIRE}`);
-  await expect(makeUp.getByRole("link", { name: "Nachholen" })).toHaveCount(1);
+  const missed = page.locator("section").filter({ has: page.getByRole("heading", { name: "Verpasst" }) });
+  await expect(missed).toContainText(`Woche 1 · ${FLOW_QUESTIONNAIRE}`);
+  await expect(missed.getByRole("button", { name: "Nachholen" })).toBeDisabled();
+  await expect(missed.getByRole("link")).toHaveCount(0);
 });
 
 test("Teilnehmende füllen die Abfrage Schritt für Schritt aus", async ({ page }) => {
@@ -77,12 +79,10 @@ test("Teilnehmende füllen die Abfrage Schritt für Schritt aus", async ({ page 
   await expect(page.getByText(SCALE_QUESTION)).toHaveCount(0);
 });
 
-test("Eine unterbrochene Abfrage lässt sich fortsetzen und nachholen", async ({ page }) => {
+test("Eine unterbrochene Abfrage lässt sich fortsetzen", async ({ page }) => {
   await register(page, { group: FLOW_GROUP });
-  const makeUp = page.locator("section").filter({ has: page.getByRole("heading", { name: "Nachholen" }) });
-  await makeUp.getByRole("link", { name: "Nachholen" }).click();
-  await expect(page.getByText("Woche 1 ·")).toBeVisible();
-  await expect(page.getByText("wird nachgeholt")).toBeVisible();
+  await page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) }).click();
+  await expect(page.getByText("Woche 2 ·")).toBeVisible();
   await page.getByRole("button", { name: "Los geht's" }).click();
   await page.getByRole("group", { name: SMILEY_QUESTION }).getByText("mittel").click();
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
@@ -90,7 +90,7 @@ test("Eine unterbrochene Abfrage lässt sich fortsetzen und nachholen", async ({
 
   // Abbrechen und später direkt bei der ersten offenen Frage weitermachen
   await page.goto("/");
-  await makeUp.getByRole("link", { name: "Fortsetzen" }).click();
+  await page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} fortsetzen`) }).click();
   await expect(page.getByText("Frage 2 von 3")).toBeVisible();
 
   // Zurück zeigt die gespeicherte Antwort
@@ -103,8 +103,16 @@ test("Eine unterbrochene Abfrage lässt sich fortsetzen und nachholen", async ({
   await page.getByRole("button", { name: "Abschließen" }).click();
 
   await expect(page.getByText("Danke! Deine Antworten sind gespeichert.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Nachholen" })).toHaveCount(0);
-  await expect(page.getByText("nachgeholt")).toBeVisible();
+  await expect(page.getByText("nachgeholt")).toHaveCount(0);
+});
+
+test("Verpasste Abfragen lassen sich nicht nachholen", async ({ page }) => {
+  await register(page, { group: FLOW_GROUP });
+  const href = await page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) }).getAttribute("href");
+  const [, , questionnaireId] = href!.split("/");
+  await page.goto(`/abfrage/${questionnaireId}/${addDays(mondayOf(berlinDate()), -7)}`);
+  await expect(page.getByText("Das Zeitfenster ist vorbei.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Los geht's" })).toHaveCount(0);
 });
 
 test("Uploads brauchen einen eigenen Eintrag und eine Audio-Frage", async ({ page }) => {

@@ -22,7 +22,7 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Bei der Anmeldung spielen Groß- und Kleinschreibung keine Rolle, Umlaute dürfen als ae, oe, ue
   geschrieben werden.
 - Die Startseite zeigt die Abfragen der eigenen Gruppe, deren Zeitfenster gerade läuft, verpasste
-  Abfragen zum Nachholen und die nächste, die noch kommt. Ohne Gruppe gibt es keine Fragen.
+  Abfragen (ausgegraut) und die nächste, die noch kommt. Ohne Gruppe gibt es keine Fragen.
 - Eine Abfrage führt Schritt für Schritt durch ihre Fragen: Smiley-Skala 1–5, Skala 0–10 oder
   Audio-Frage. Pflichtfragen lassen sich nicht überspringen. Jede Antwort wird sofort gespeichert;
   eine unterbrochene Abfrage geht bei der ersten offenen Frage weiter.
@@ -78,8 +78,9 @@ Die App ist für das Mobiltelefon gebaut und funktioniert genauso am Desktop.
 - Woche 1 ist die Woche (Montag bis Sonntag), in die der Studienstart fällt.
 - Jede Abfrage hat ein Zeitfenster innerhalb der Woche, z. B. Montag bis Mittwoch. Zeitfenster, die
   ganz vor dem Start oder nach dem Ende liegen, entfallen.
-- Ist das Zeitfenster vorbei, erscheint die Abfrage unter „Nachholen". Nachgeholte Einträge zählen
-  zu ihrer ursprünglichen Woche und sind im Export gekennzeichnet.
+- Ausfüllen geht nur, solange das Zeitfenster läuft. Danach erscheint die Abfrage ausgegraut unter
+  „Verpasst" und lässt sich nicht mehr nachholen, auch nicht, wenn sie schon begonnen war. Früher
+  nachgeholte Einträge bleiben im Export gekennzeichnet.
 - Alle Tage und Uhrzeiten gelten in deutscher Zeit.
 
 ## Wo was im Code steht

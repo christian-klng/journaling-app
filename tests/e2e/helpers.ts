@@ -92,7 +92,7 @@ export async function useFakeMicrophone(page: Page) {
 }
 
 // Testgruppe mit einer Abfrage, die jeden Tag offen ist; Start in der Vorwoche, damit es auch
-// immer etwas zum Nachholen gibt
+// immer eine verpasste gibt
 export const FLOW_GROUP = "X";
 export const FLOW_QUESTIONNAIRE = "Täglich";
 export const SMILEY_QUESTION = "Wie geht es dir?";
