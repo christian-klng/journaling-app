@@ -125,23 +125,17 @@ export function QuestionnaireFlow({
         <Card className="space-y-3">
           <h2 className="font-semibold">Fast geschafft</h2>
           <ul className="space-y-2">
-            {items.map((item, index) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => go(index)}
-                  className="flex w-full items-start gap-3 rounded-lg py-1 text-left hover:text-accent-ink"
-                >
-                  <span aria-hidden className={answered(item) ? "text-accent-ink" : "text-muted"}>
-                    {answered(item) ? "✓" : "–"}
-                  </span>
-                  <span className="text-sm">
-                    {item.text}
-                    {!answered(item) && (
-                      <span className="text-muted">{item.required ? " (fehlt noch)" : " (übersprungen)"}</span>
-                    )}
-                  </span>
-                </button>
+            {items.map((item) => (
+              <li key={item.id} className="flex items-start gap-3 py-1">
+                <span aria-hidden className={answered(item) ? "text-accent-ink" : "text-muted"}>
+                  {answered(item) ? "✓" : "–"}
+                </span>
+                <span className="text-sm">
+                  {item.text}
+                  {!answered(item) && (
+                    <span className="text-muted">{item.required ? " (fehlt noch)" : " (übersprungen)"}</span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
