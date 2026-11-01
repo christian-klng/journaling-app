@@ -19,7 +19,7 @@ const groupCard = (page: Page, letter: string) =>
 
 test("Admin legt Zeitraum, Gruppen und eine Abfrage an", async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole("link", { name: "Studie" }).click();
+  await page.getByRole("link", { name: "Studie", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Studie", exact: true })).toBeVisible();
 
   await page.getByLabel("Start", { exact: true }).fill("2026-10-19");
