@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ConfirmForm } from "@/components/admin/confirm-form";
 import { ExportLink } from "@/components/admin/export-link";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
+import { setParticipantIgnored } from "@/lib/admin/actions";
 import { getParticipationData } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
+import { formatShortDate } from "@/lib/format";
 import { getStudyPeriod } from "@/lib/settings";
 import { formatCode } from "@/lib/study/code";
 import { buildParticipation, type ParticipationStatus } from "@/lib/study/participation";
@@ -65,7 +68,7 @@ export default async function ParticipationPage() {
       {weeks.length === 0 ? (
         <p className="text-muted">Die Studie hat noch nicht begonnen.</p>
       ) : (
-        <Card className="overflow-x-auto p-0">
+        <Card className="relative overflow-x-auto p-0">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-border text-left text-muted">
@@ -94,6 +97,19 @@ export default async function ParticipationPage() {
                       <span className="block font-mono text-xs text-muted">
                         {formatCode(person.codeStem, person.groupLetter) ?? "kein Code"}
                       </span>
+                      {/* In der festen Spalte, damit es auch bei vielen Wochen ohne Scrollen erreichbar ist */}
+                      <ConfirmForm
+                        action={setParticipantIgnored.bind(null, person.id, true)}
+                        message={`${person.displayName} ignorieren? Die Person fehlt dann in Übersicht, Teilnahme und Exporten. Ihre Einträge bleiben erhalten, und du kannst sie jederzeit zurückholen.`}
+                      >
+                        <button
+                          type="submit"
+                          aria-label={`${person.displayName} ignorieren`}
+                          className="-mb-1 min-h-7 text-xs text-muted underline-offset-4 hover:text-foreground hover:underline"
+                        >
+                          Ignorieren
+                        </button>
+                      </ConfirmForm>
                     </th>
                     <td className="px-2 py-2 tabular-nums">
                       {row.due > 0 ? `${row.completed}/${row.due}` : "–"}
@@ -137,6 +153,40 @@ export default async function ParticipationPage() {
           </li>
         ))}
       </ul>
+
+      {data.ignored.length > 0 && (
+        <section className="space-y-2">
+          <div className="space-y-1">
+            <h2 className="font-semibold">Ignoriert</h2>
+            <p className="text-sm text-muted">
+              Diese Personen fehlen in Übersicht, Teilnahme und Exporten, z. B. Testkonten oder
+              Personen, die ausgestiegen sind. Ihre Einträge bleiben erhalten.
+            </p>
+          </div>
+          <Card className="p-0">
+            <ul className="divide-y divide-border">
+              {data.ignored.map((person) => (
+                <li key={person.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                  <span className="min-w-0">
+                    <Link href={`/admin/nutzer/${person.id}`} className="block font-medium hover:text-accent-ink">
+                      {person.displayName}
+                    </Link>
+                    <span className="block text-xs text-muted">
+                      <span className="font-mono">{formatCode(person.codeStem, person.groupLetter) ?? "kein Code"}</span>
+                      {" · "}ignoriert seit {formatShortDate(person.ignoredAt!)}
+                    </span>
+                  </span>
+                  <form action={setParticipantIgnored.bind(null, person.id, false)}>
+                    <Button type="submit" variant="secondary" size="sm">
+                      Wieder berücksichtigen
+                    </Button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ const memberColumns = {
   role: users.role,
   codeStem: users.codeStem,
   studyGroupId: users.studyGroupId,
+  ignoredAt: users.ignoredAt,
   createdAt: users.createdAt,
 };
 
@@ -18,6 +19,7 @@ export type Member = {
   codeStem: string | null;
   studyGroupId: string | null;
   groupLetter: string | null;
+  ignoredAt: Date | null;
   entryCount: number;
   lastEntryAt: Date | null;
 };
@@ -25,13 +27,14 @@ export type Member = {
 export async function getOverview() {
   const groups = await db.select().from(studyGroups).orderBy(asc(studyGroups.letter));
 
-  const members: Member[] = await db
+  const all: Member[] = await db
     .select({
       id: users.id,
       displayName: users.displayName,
       codeStem: users.codeStem,
       studyGroupId: users.studyGroupId,
       groupLetter: studyGroups.letter,
+      ignoredAt: users.ignoredAt,
       entryCount: count(entries.id),
       lastEntryAt: max(entries.createdAt),
     })
@@ -41,6 +44,7 @@ export async function getOverview() {
     .where(eq(users.role, "user"))
     .groupBy(users.id, studyGroups.letter)
     .orderBy(asc(users.displayName));
+  const members = all.filter((m) => !m.ignoredAt);
 
   return {
     groups: groups.map((group) => ({
@@ -49,6 +53,7 @@ export async function getOverview() {
     })),
     withoutGroup: members.filter((m) => m.studyGroupId === null),
     members,
+    ignored: all.filter((m) => m.ignoredAt),
     totalEntries: members.reduce((sum, m) => sum + m.entryCount, 0),
   };
 }
@@ -70,16 +75,18 @@ export type ExportScope = { userId?: string; groupId?: string | "none" };
 
 /**
  * Personen im gewählten Umfang mit allen Einträgen, Antworten und Aufnahmen, dazu alles für die
- * Teilnahme: aktive Abfragen und der Stand der Einträge.
+ * Teilnahme: aktive Abfragen und der Stand der Einträge. Ignorierte Personen fehlen, außer sie
+ * werden ausdrücklich einzeln exportiert.
  */
 export async function getExportData(scope: ExportScope) {
+  const counted = and(eq(users.role, "user"), isNull(users.ignoredAt));
   const where = scope.userId
     ? and(eq(users.id, scope.userId), eq(users.role, "user"))
     : scope.groupId === "none"
-      ? and(isNull(users.studyGroupId), eq(users.role, "user"))
+      ? and(isNull(users.studyGroupId), counted)
       : scope.groupId
-        ? and(eq(users.studyGroupId, scope.groupId), eq(users.role, "user"))
-        : eq(users.role, "user");
+        ? and(eq(users.studyGroupId, scope.groupId), counted)
+        : counted;
 
   const people = await db
     .select({
@@ -125,9 +132,12 @@ export async function getExportData(scope: ExportScope) {
 }
 
 
-/** Alles für die Teilnahme-Tabelle: Personen, aktive Abfragen und abgegebene Einträge. */
+/**
+ * Alles für die Teilnahme-Tabelle: Personen, aktive Abfragen und abgegebene Einträge. Ignorierte
+ * Personen stehen getrennt, damit Admins sie zurückholen können.
+ */
 export async function getParticipationData() {
-  const [people, activeQuestionnaires, rows] = await Promise.all([
+  const [all, activeQuestionnaires, rows] = await Promise.all([
     db
       .select({
         id: users.id,
@@ -135,6 +145,7 @@ export async function getParticipationData() {
         codeStem: users.codeStem,
         studyGroupId: users.studyGroupId,
         groupLetter: studyGroups.letter,
+        ignoredAt: users.ignoredAt,
       })
       .from(users)
       .leftJoin(studyGroups, eq(studyGroups.id, users.studyGroupId))
@@ -162,7 +173,12 @@ export async function getParticipationData() {
       .from(entries)
       .where(isNotNull(entries.questionnaireId)),
   ]);
-  return { people, questionnaires: activeQuestionnaires, entries: rows };
+  return {
+    people: all.filter((p) => !p.ignoredAt),
+    ignored: all.filter((p) => p.ignoredAt),
+    questionnaires: activeQuestionnaires,
+    entries: rows,
+  };
 }
 
 /** Gelöschte Konten, die die Studienleitung noch aus ihren Exporten entfernen muss. */

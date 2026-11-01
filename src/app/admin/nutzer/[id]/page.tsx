@@ -8,7 +8,7 @@ import { ExportLink } from "@/components/admin/export-link";
 import { ResetPassword } from "@/components/admin/reset-password";
 import { EntryView } from "@/components/entry-view";
 import { Button, Card } from "@/components/ui";
-import { assignStudyGroup, deleteParticipant, retryEntry } from "@/lib/admin/actions";
+import { assignStudyGroup, deleteParticipant, retryEntry, setParticipantIgnored } from "@/lib/admin/actions";
 import { getMember } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/guards";
 import { entryTitle } from "@/lib/entry-title";
@@ -51,6 +51,20 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
         </p>
       </div>
 
+      {member.ignoredAt && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-3 py-2 text-sm">
+          <p className="text-muted">
+            Seit {formatShortDate(member.ignoredAt)} ignoriert. Die Person fehlt in Übersicht, Teilnahme
+            und Exporten, ihre Einträge bleiben erhalten.
+          </p>
+          <form action={setParticipantIgnored.bind(null, member.id, false)}>
+            <Button type="submit" variant="secondary" size="sm">
+              Wieder berücksichtigen
+            </Button>
+          </form>
+        </div>
+      )}
+
       <Card className="space-y-4">
         {member.role === "user" && (
           <form action={assignStudyGroup.bind(null, member.id)} className="space-y-1.5">
@@ -73,6 +87,16 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
         {member.id !== me.id && (
           <div className="flex flex-wrap gap-2">
             <ResetPassword userId={member.id} displayName={member.displayName} />
+            {member.role === "user" && !member.ignoredAt && (
+              <ConfirmForm
+                action={setParticipantIgnored.bind(null, member.id, true)}
+                message={`${member.displayName} ignorieren? Die Person fehlt dann in Übersicht, Teilnahme und Exporten. Ihre Einträge bleiben erhalten, und du kannst sie jederzeit zurückholen.`}
+              >
+                <Button type="submit" variant="secondary" size="sm">
+                  Ignorieren
+                </Button>
+              </ConfirmForm>
+            )}
             {member.role === "user" && (
               <ConfirmForm
                 action={deleteParticipant.bind(null, member.id)}

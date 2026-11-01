@@ -67,7 +67,7 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
         </div>
       )}
 
-      {overview.members.length === 0 && (
+      {overview.members.length === 0 && overview.ignored.length === 0 && (
         <p className="text-muted">
           Noch ist niemand registriert. Unter{" "}
           <Link href="/admin/studie" className="font-medium text-accent-ink underline underline-offset-4">
@@ -87,6 +87,9 @@ export default async function AdminHome({ searchParams }: PageProps<"/admin">) {
       ))}
       {overview.withoutGroup.length > 0 && (
         <GroupCard name="Ohne Gruppe" members={overview.withoutGroup} exportQuery="?group=none" muted />
+      )}
+      {overview.ignored.length > 0 && (
+        <GroupCard name="Ignoriert" members={overview.ignored} muted collapsed />
       )}
 
       {overview.members.length > 0 && (
@@ -111,17 +114,20 @@ function GroupCard({
   members,
   exportQuery,
   muted = false,
+  collapsed = false,
 }: {
   name: string;
   members: Member[];
-  exportQuery: string;
+  /** Ohne Export, z. B. bei ignorierten Personen */
+  exportQuery?: string;
   muted?: boolean;
+  collapsed?: boolean;
 }) {
   const hasEntries = members.some((m) => m.entryCount > 0);
 
   return (
     <Card className="p-0">
-      <details open className="group">
+      <details open={!collapsed} className="group">
         <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 [&::-webkit-details-marker]:hidden">
           <span aria-hidden className="text-muted transition-transform group-open:rotate-90">
             ›
@@ -160,7 +166,7 @@ function GroupCard({
               ))}
             </ul>
           )}
-          {hasEntries && (
+          {hasEntries && exportQuery && (
             <div className="border-t border-border px-4 py-3">
               <ExportLink query={exportQuery} label="Gruppe exportieren" />
             </div>

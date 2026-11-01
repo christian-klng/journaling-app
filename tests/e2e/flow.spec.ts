@@ -4,6 +4,7 @@ import {
   FLOW_GROUP,
   FLOW_QUESTIONNAIRE,
   loginAsAdmin,
+  readZipEntry,
   recordAnswer,
   register,
   SCALE_QUESTION,
@@ -136,4 +137,21 @@ test("Admin sieht die Teilnahme", async ({ page }) => {
   await expect(row).toContainText(`0/2`);
   await expect(row.getByText(`${FLOW_QUESTIONNAIRE}: verpasst`)).toBeAttached();
   await expect(row.getByText(`${FLOW_QUESTIONNAIRE}: läuft gerade`)).toBeAttached();
+});
+
+test("Admin ignoriert eine Person und holt sie zurück", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/admin/teilnahme");
+  const table = page.getByRole("table");
+  await table.getByRole("button", { name: `${userName} ignorieren` }).click();
+
+  await expect(table.getByRole("link", { name: userName })).toHaveCount(0);
+  const ignored = page.locator("section").filter({ has: page.getByRole("heading", { name: "Ignoriert" }) });
+  await expect(ignored.getByRole("link", { name: userName })).toBeVisible();
+
+  const zip = await (await page.request.get("/api/admin/export")).body();
+  for (const file of ["antworten.csv", "teilnahme.csv"]) expect(readZipEntry(zip, file)).not.toContain(userName);
+
+  await ignored.getByRole("button", { name: "Wieder berücksichtigen" }).click();
+  await expect(table.getByRole("link", { name: userName })).toBeVisible();
 });

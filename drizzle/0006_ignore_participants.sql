@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "ignored_at" timestamp with time zone;

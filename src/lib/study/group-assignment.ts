@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { studyGroups, users } from "@/lib/db/schema";
 import { isRandomGroupAssignmentEnabled } from "@/lib/settings";
@@ -20,10 +20,11 @@ export async function isRandomGroupAssignmentActive() {
 export async function drawGroup(tx: Transaction) {
   // Hintereinander, damit zwei gleichzeitige Registrierungen nicht beide dieselbe kleinste Gruppe sehen
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext('random_group_assignment'))`);
+  // Ignorierte Konten (Tests, Ausgestiegene) zählen nicht, sonst blieben die Gruppen ungleich groß
   const groups = await tx
     .select({ id: studyGroups.id, members: count(users.id) })
     .from(studyGroups)
-    .leftJoin(users, and(eq(users.studyGroupId, studyGroups.id), eq(users.role, "user")))
+    .leftJoin(users, and(eq(users.studyGroupId, studyGroups.id), eq(users.role, "user"), isNull(users.ignoredAt)))
     .groupBy(studyGroups.id);
   return pickBalancedGroup(groups)?.id ?? null;
 }

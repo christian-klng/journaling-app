@@ -36,6 +36,9 @@ export const users = pgTable(
     codeStem: text("code_stem"),
     // Setzen Teilnehmende einmal selbst, danach ändern ihn nur Admins
     studyGroupId: uuid("study_group_id").references(() => studyGroups.id, { onDelete: "restrict" }),
+    // Von Admins ausgeblendet, z. B. Testkonten oder Personen, die ausgestiegen sind. Die Daten
+    // bleiben, zählen aber in Übersicht, Teilnahme und Exporten nicht mehr mit.
+    ignoredAt: timestamp("ignored_at", { withTimezone: true }),
     mustChangePassword: boolean("must_change_password").notNull().default(false),
     tempPasswordExpiresAt: timestamp("temp_password_expires_at", { withTimezone: true }),
     consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),

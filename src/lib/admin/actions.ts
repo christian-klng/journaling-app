@@ -57,6 +57,20 @@ export async function deleteParticipant(userId: string) {
   redirect("/admin?geloescht=1");
 }
 
+/**
+ * Blendet eine Person aus Übersicht, Teilnahme, Statistik und Exporten aus, z. B. ein Testkonto
+ * oder jemanden, der ausgestiegen ist, oder holt sie zurück. Einträge und Konto bleiben erhalten.
+ */
+export async function setParticipantIgnored(userId: string, ignored: boolean) {
+  await assertAdmin();
+  if (!isUuid(userId)) return;
+  await db
+    .update(users)
+    .set({ ignoredAt: ignored ? new Date() : null })
+    .where(and(eq(users.id, userId), eq(users.role, "user")));
+  revalidatePath("/admin", "layout");
+}
+
 /** Die Studienleitung hat die gelöschte Person auch aus ihren Exporten entfernt. */
 export async function dismissDeletionNotice(id: string) {
   await assertAdmin();
@@ -81,7 +95,7 @@ export async function assignGroupsInBulk(_state: BulkState, formData: FormData):
     db
       .select({ id: users.id, displayName: users.displayName, codeStem: users.codeStem, studyGroupId: users.studyGroupId })
       .from(users)
-      .where(eq(users.role, "user")),
+      .where(and(eq(users.role, "user"), isNull(users.ignoredAt))),
   ]);
   const report = invalid.map((i) => `Zeile ${i.line}: „${i.text}“ ist kein gültiger Code mit Gruppe.`);
   let changed = 0;

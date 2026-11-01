@@ -1,15 +1,16 @@
 import "server-only";
-import { asc, count, eq, isNull } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { questionnaireItems, questionnaires, studyGroups, users } from "@/lib/db/schema";
 import { getStudyPeriod } from "@/lib/settings";
 import { STUDY_FILE_FORMAT, type StudyFile } from "./config";
 
-/** Alle Gruppen mit ihren Abfragen, der Zahl der aktiven Elemente und der Personen. */
+/** Alle Gruppen mit ihren Abfragen, der Zahl der aktiven Elemente und der Personen ohne ignorierte. */
 export async function getStudyOverview() {
   const memberCounts = await db
     .select({ groupId: users.studyGroupId, members: count() })
     .from(users)
+    .where(and(eq(users.role, "user"), isNull(users.ignoredAt)))
     .groupBy(users.studyGroupId);
   const groups = await db.query.studyGroups.findMany({
     orderBy: asc(studyGroups.letter),

@@ -43,6 +43,13 @@
       "when": 1792319021111,
       "tag": "0005_datenschutz",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793556881870,
+      "tag": "0006_ignore_participants",
+      "breakpoints": true
     }
   ]
 }
