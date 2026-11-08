@@ -3,7 +3,6 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { CONSENT_VERSION, LEGAL } from "@/lib/legal";
 import { getStudyPeriod } from "@/lib/settings";
-import { isRandomGroupAssignmentActive } from "@/lib/study/group-assignment";
 
 export const metadata: Metadata = { title: "Studienbedingungen" };
 
@@ -13,9 +12,9 @@ const formatDate = (date: string) => date.split("-").reverse().join(".");
 // Wie die Studie abläuft. Alles zu den Daten steht in der Datenschutzinformation; die beiden Seiten
 // wiederholen sich nicht. Bei inhaltlichen Änderungen CONSENT_VERSION erhöhen.
 export default async function StudyTermsPage() {
-  // Zeitraum und Gruppenzuordnung stellt die Studienleitung in der App ein
+  // Den Zeitraum stellt die Studienleitung in der App ein
   await connection();
-  const [period, randomGroup] = await Promise.all([getStudyPeriod(), isRandomGroupAssignmentActive()]);
+  const period = await getStudyPeriod();
   const { studyLead, supervisor } = LEGAL;
 
   return (
@@ -50,10 +49,9 @@ export default async function StudyTermsPage() {
             <Link href="/datenschutz">Datenschutzinformation</Link>.
           </li>
           <li>
-            Die Teilnehmenden sind in Gruppen mit unterschiedlichen Fragen eingeteilt.{" "}
-            {randomGroup
-              ? "Deine Gruppe lost dir die App bei der Registrierung zu."
-              : "Deine Gruppe erfährst du von der Studienleitung und trägst sie in der App ein."}
+            Die Teilnehmenden sind in Gruppen mit unterschiedlichen Fragen eingeteilt. Die Zuordnung
+            übernimmt die Studienleitung im Hintergrund, du musst dafür nichts tun. Welcher Gruppe du
+            angehörst, zeigt dir die App nicht an.
           </li>
           <li>
             Jede Woche erscheinen kurze Abfragen mit Skalenfragen und Fragen, die du per Sprachaufnahme

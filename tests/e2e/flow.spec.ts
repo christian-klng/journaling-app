@@ -30,7 +30,7 @@ test("Admin richtet die Studie ein", async ({ page }) => {
 
 test("Ohne Gruppe gibt es keine Fragen", async ({ page }) => {
   await register(page);
-  await expect(page.getByText("Deine Gruppe fehlt noch.")).toBeVisible();
+  await expect(page.getByText("Deine Teilnahme wird vorbereitet.")).toBeVisible();
   await expect(page.getByRole("link", { name: new RegExp(FLOW_QUESTIONNAIRE) })).toHaveCount(0);
 });
 

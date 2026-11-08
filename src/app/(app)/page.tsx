@@ -1,15 +1,10 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
 import { PendingUploads } from "@/components/pending-uploads";
-import { AttentionDot, Button, Card, Notice } from "@/components/ui";
+import { Button, Card, Notice } from "@/components/ui";
 import { requireParticipant } from "@/lib/auth/guards";
-import { db } from "@/lib/db";
-import { studyGroups } from "@/lib/db/schema";
 import { entryTitle } from "@/lib/entry-title";
 import { listEntries, toEntryDto } from "@/lib/entries";
 import { formatDate, formatShortDate } from "@/lib/format";
-import { formatCode } from "@/lib/study/code";
-import { isRandomGroupAssignmentActive } from "@/lib/study/group-assignment";
 import { getParticipantSchedule, type ParticipantSlot } from "@/lib/study/participant";
 import { formatDay, formatRange } from "@/lib/study/schedule";
 
@@ -17,15 +12,7 @@ const slotHref = (slot: ParticipantSlot) => `/abfrage/${slot.questionnaire.id}/$
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const user = await requireParticipant();
-  const [params, schedule, all, [group], randomGroup] = await Promise.all([
-    searchParams,
-    getParticipantSchedule(user),
-    listEntries(user.id),
-    user.studyGroupId
-      ? db.select({ letter: studyGroups.letter }).from(studyGroups).where(eq(studyGroups.id, user.studyGroupId))
-      : [],
-    user.studyGroupId ? false : isRandomGroupAssignmentActive(),
-  ]);
+  const [params, schedule, all] = await Promise.all([searchParams, getParticipantSchedule(user), listEntries(user.id)]);
   const studyStart = schedule.period.start;
   const done = all
     .filter((entry) => entry.completedAt || !entry.questionnaireId)
@@ -39,11 +26,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           Willkommen! Dein Benutzername ist <strong>{user.displayName}</strong>. Mit ihm meldest du
           dich an, notiere ihn dir. Unter diesem Namen sieht die wissenschaftliche Begleitung deine
           Einträge.
-          {group && (
+          {/* Nur der Code-Anfang: Teilnehmende sehen ihre Gruppe nie */}
+          {user.codeStem && (
             <>
               {" "}
-              Du bist in Gruppe {group.letter}, dein persönlicher Code ist{" "}
-              <strong className="font-mono">{formatCode(user.codeStem, group.letter)}</strong>.
+              Dein persönlicher Code ist <strong className="font-mono">{user.codeStem}</strong>.
             </>
           )}
         </Notice>
@@ -51,20 +38,16 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       {params.passwort && <Notice>Dein Passwort wurde geändert.</Notice>}
       {params.erledigt && <Notice>Danke! Deine Antworten sind gespeichert.</Notice>}
 
+      {/* Ohne Gruppe gibt es noch keine Abfragen. Die Zuordnung übernimmt die Studienleitung im
+          Hintergrund, deshalb ist hier von keiner Gruppe die Rede. */}
       {!user.studyGroupId && (
-        <Link
-          href="/profil"
-          className="flex items-center gap-3 rounded-xl border border-record/40 px-3 py-2 text-sm hover:bg-accent-soft"
-        >
-          <AttentionDot />
-          <span>
-            <strong>Deine Gruppe fehlt noch.</strong>{" "}
-            {randomGroup
-              ? "Die Studienleitung trägt sie für dich ein."
-              : "Trag sie ein, sobald du sie von der Studienleitung erfahren hast."}{" "}
-            Danach erscheinen hier deine Fragen.
-          </span>
-        </Link>
+        <Card className="space-y-1 text-center">
+          <p className="font-semibold">Deine Teilnahme wird vorbereitet.</p>
+          <p className="text-sm text-muted">
+            Du musst nichts weiter tun. Sobald die Studienleitung alles eingerichtet hat, erscheinen
+            hier deine Fragen.
+          </p>
+        </Card>
       )}
 
       <PendingUploads />

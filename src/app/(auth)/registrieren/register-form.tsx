@@ -5,15 +5,7 @@ import { CodeFields } from "@/components/study/code-fields";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
 import { register, suggestNames, type FormState } from "@/lib/auth/actions";
 
-export function RegisterForm({
-  proposedNames,
-  groups,
-  randomGroup,
-}: {
-  proposedNames: string[];
-  groups: { id: string; letter: string }[];
-  randomGroup: boolean;
-}) {
+export function RegisterForm({ proposedNames }: { proposedNames: string[] }) {
   const [names, setNames] = useState(proposedNames);
   const [name, setName] = useState(proposedNames[0]);
   const [suggesting, startSuggesting] = useTransition();
@@ -97,22 +89,7 @@ export function RegisterForm({
           className={inputClass}
         />
       </Field>
-      <CodeFields defaults={state?.fields} randomGroup={randomGroup} />
-      {groups.length > 0 && (
-        <Field
-          label="Deine Gruppe"
-          hint="Falls du sie noch nicht kennst, trägst du sie später ein. Ändern kann sie danach nur die Studienleitung."
-        >
-          <select name="groupId" defaultValue={state?.fields?.groupId ?? ""} className={inputClass}>
-            <option value="">Noch nicht bekannt</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                Gruppe {group.letter}
-              </option>
-            ))}
-          </select>
-        </Field>
-      )}
+      <CodeFields defaults={state?.fields} />
       <div className="space-y-3 text-sm">
         <label className="flex items-start gap-3">
           <input type="checkbox" name="consent" required className="mt-0.5 size-5 shrink-0 accent-accent" />

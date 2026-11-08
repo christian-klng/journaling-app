@@ -15,7 +15,7 @@ type Result = { error: string } | undefined;
 
 async function participant() {
   const user = await assertUser();
-  if (user.role !== "user" || !user.studyGroupId) throw new HttpError(403, "Keine Gruppe eingetragen");
+  if (user.role !== "user" || !user.studyGroupId) throw new HttpError(403, "Deine Teilnahme ist noch nicht freigeschaltet");
   return user as User & { studyGroupId: string };
 }
 

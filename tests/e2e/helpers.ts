@@ -25,7 +25,19 @@ async function resetRegistrationLimit() {
   await sql`delete from login_attempts where key like 'register:%'`;
 }
 
-/** Registriert ein Konto und gibt den vergebenen Fantasienamen zurück. */
+/** Weist eine Person einer Gruppe zu, wie es die Studienleitung im Hintergrund tut. */
+export async function assignGroup(displayName: string, letter: string) {
+  sql ??= postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
+  const updated = await sql`
+    update users set study_group_id = (select id from study_groups where letter = ${letter})
+    where display_name = ${displayName} returning id`;
+  if (updated.length !== 1) throw new Error(`${displayName} ließ sich nicht Gruppe ${letter} zuweisen`);
+}
+
+/**
+ * Registriert ein Konto und gibt den vergebenen Fantasienamen zurück. Eine Gruppe wählt bei der
+ * Registrierung niemand; mit `group` wird sie danach im Hintergrund zugewiesen.
+ */
 export async function register(page: Page, options: { codeStem?: string; group?: string } = {}) {
   const [mother, month, birthplace] = (options.codeStem ?? randomCodeStem()).split("-");
   await resetRegistrationLimit();
@@ -37,10 +49,13 @@ export async function register(page: Page, options: { codeStem?: string; group?:
   await page.getByLabel("Vornamens deiner Mutter").fill(mother.toLowerCase());
   await page.getByLabel("Dein Geburtsmonat").selectOption(month);
   await page.getByLabel("Geburtsortes").fill(birthplace);
-  if (options.group) await page.getByLabel("Deine Gruppe").selectOption({ label: `Gruppe ${options.group}` });
   for (const checkbox of await page.getByRole("checkbox").all()) await checkbox.check();
   await page.getByRole("button", { name: "Konto anlegen" }).click();
   await expect(page).toHaveURL(/\/\?willkommen=1$/);
+  if (options.group) {
+    await assignGroup(name, options.group);
+    await page.reload();
+  }
   return name;
 }
 

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "@/lib/db";
-import { studyGroups, users } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
 import { CONSENT_VERSION } from "@/lib/legal";
 import { isGeneratedName, normalizeLoginName } from "@/lib/names";
 import { CodePartsSchema, codeStemFromParts } from "@/lib/study/code";
@@ -33,7 +33,6 @@ const RegisterSchema = z.object({
   username: z.string(),
   password,
   passwordRepeat: z.string(),
-  groupId: z.union([z.literal(""), z.uuid()]),
   consent: z.literal("on", "Bitte stimme der Verarbeitung deiner Aufnahmen zu."),
   adult: z.literal("on", "Bitte bestätige die Studienbedingungen. Teilnehmen kannst du nur, wenn du mindestens 18 Jahre alt bist."),
 });
@@ -41,7 +40,6 @@ const RegisterSchema = z.object({
 export async function register(_state: FormState, formData: FormData): Promise<FormState> {
   const fields = {
     username: String(formData.get("username") ?? ""),
-    groupId: String(formData.get("groupId") ?? ""),
     mother: String(formData.get("mother") ?? ""),
     month: String(formData.get("month") ?? ""),
     birthplace: String(formData.get("birthplace") ?? ""),
@@ -77,15 +75,10 @@ export async function register(_state: FormState, formData: FormData): Promise<F
   };
   if (await isNameTaken(data.username)) return taken;
 
-  // Die Gruppe ist bei der Registrierung oft noch nicht bekannt und wird dann später nachgetragen,
-  // außer bei zufälliger Zuordnung: Dann lost die App sie zu und die Auswahl im Formular entfällt
+  // Teilnehmende wählen und sehen ihre Gruppe nie. Bei zufälliger Zuordnung lost die App sie zu,
+  // sonst weist die Studienleitung sie später in der Übersicht zu.
   const randomGroup = await isRandomGroupAssignmentActive();
   let studyGroupId: string | null = null;
-  if (data.groupId && !randomGroup) {
-    const [group] = await db.select({ id: studyGroups.id }).from(studyGroups).where(eq(studyGroups.id, data.groupId));
-    if (!group) return { error: "Diese Gruppe gibt es nicht. Bitte wähle eine andere.", fields };
-    studyGroupId = group.id;
-  }
 
   const passwordHash = await hashPassword(data.password);
   const [user] = await db.transaction(async (tx) => {

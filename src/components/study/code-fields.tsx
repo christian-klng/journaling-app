@@ -1,23 +1,18 @@
 import { Field, inputClass } from "@/components/ui";
 import { MONTHS } from "@/lib/study/code";
 
-/** Erklärung und Eingabe der drei Teile des persönlichen Codes. Der Gruppenbuchstabe kommt später dazu. */
-export function CodeFields({
-  defaults,
-  randomGroup = false,
-}: {
-  defaults?: { mother?: string; month?: string; birthplace?: string };
-  randomGroup?: boolean;
-}) {
+/**
+ * Erklärung und Eingabe der drei Teile des persönlichen Codes. Den Gruppenbuchstaben ergänzt nur die
+ * Studienleitung, Teilnehmende sehen ihre Gruppe nie.
+ */
+export function CodeFields({ defaults }: { defaults?: { mother?: string; month?: string; birthplace?: string } }) {
   return (
     <fieldset className="space-y-3 rounded-2xl border border-border p-4">
       <legend className="px-1 font-semibold">Persönlicher Code</legend>
       <p className="text-sm text-muted">
         Damit deine Einträge mit möglichen späteren Befragungen verknüpft werden können, ohne deinen
-        Namen zu erfassen, bildest du einen persönlichen Code. Nur du kannst ihn erneut erzeugen. Der
-        letzte Teil ist der Buchstabe deiner Gruppe,{" "}
-        {randomGroup ? "die dir die App bei der Registrierung zuteilt" : "den dir die Studienleitung mitteilt"}.
-        Beispiel: KA-03-BE-A
+        Namen zu erfassen, bildest du einen persönlichen Code. Nur du kannst ihn erneut erzeugen.
+        Beispiel: KA-03-BE
       </p>
       <Field label="Die ersten beiden Buchstaben des Vornamens deiner Mutter">
         <input

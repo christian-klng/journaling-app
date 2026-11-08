@@ -133,7 +133,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/nutzer/[i
                 <h3 className="font-semibold">{entryTitle(dto)}</h3>
                 <span className="block text-sm text-muted">
                   {formatDate(entry.createdAt)}
-                  {dto.groupLetter && ` · Gruppe ${dto.groupLetter}`}
+                  {entry.studyGroup && ` · Gruppe ${entry.studyGroup.letter}`}
                   {dto.late && " · nachgeholt"}
                 </span>
               </span>

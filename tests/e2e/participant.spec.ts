@@ -34,73 +34,25 @@ test("Admin legt die Gruppen an", async ({ page }) => {
   await setupStudy(page);
 });
 
-test("Teilnehmende sehen bei der Registrierung nur die Buchstaben der Gruppen", async ({ page }) => {
+test("Die Registrierung fragt nach keiner Gruppe", async ({ page }) => {
   await page.goto("/registrieren");
-  await expect(page.getByLabel("Deine Gruppe").getByRole("option", { name: "Gruppe Z" })).toBeAttached();
-  await expect(page.getByText("E2E Gruppe")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Konto anlegen" })).toBeVisible();
+  await expect(page.locator("main")).not.toContainText("Gruppe");
+  await expect(page.getByRole("combobox")).toHaveCount(1); // nur der Geburtsmonat
 });
 
-test("Ohne Gruppe blinkt ein roter Punkt, die Gruppe lässt sich einmal eintragen", async ({ page }) => {
+test("Ohne Gruppe ist die Teilnahme in Vorbereitung, von einer Gruppe ist nie die Rede", async ({ page }) => {
   userName = await register(page, { codeStem: stem });
-  await expect(page.getByText("Deine Gruppe fehlt noch.")).toBeVisible();
-  await expect(page.getByRole("button", { name: `Menü für ${userName}, Gruppe fehlt` })).toBeVisible();
+  await expect(page.getByText("Deine Teilnahme wird vorbereitet.")).toBeVisible();
+  await expect(page.getByText(`Dein persönlicher Code ist ${stem}.`)).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Gruppe");
+  await expect(page.getByRole("button", { name: `Menü für ${userName}`, exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: /^Menü für/ }).click();
-  await page.getByRole("menuitem", { name: "Code und Gruppe" }).click();
-  await expect(page.getByText(`${stem}-?`)).toBeVisible();
-  await expect(page.getByText("Noch nicht eingetragen")).toBeVisible();
-
-  await page.getByLabel("Deine Gruppe").selectOption({ label: "Gruppe Z" });
-  await page.getByRole("button", { name: "Gruppe eintragen" }).click();
-  await expect(page.getByText(`${stem}-Z`)).toBeVisible();
-  // Danach gibt es kein Formular mehr, ändern kann nur die Studienleitung
-  await expect(page.getByRole("button", { name: "Gruppe eintragen" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: `Menü für ${userName}` })).not.toHaveAccessibleName(/Gruppe fehlt/);
-
-  await page.goto("/");
-  await expect(page.getByText("Deine Gruppe fehlt noch.")).toHaveCount(0);
-});
-
-test("Die Gruppe lässt sich schon bei der Registrierung wählen", async ({ page }) => {
-  await register(page, { group: "Y" });
-  await expect(page.getByText("Deine Gruppe fehlt noch.")).toHaveCount(0);
-  await page.goto("/profil");
-  await expect(page.getByText("Gruppe Y", { exact: true })).toBeVisible();
-});
-
-test("Bei zufälliger Zuordnung bekommen neue Teilnehmende sofort eine Gruppe", async ({ page }) => {
-  await loginAsAdmin(page);
-  await page.goto("/admin/studie");
-  await page.getByRole("button", { name: "Zufällige Zuordnung einschalten" }).click();
-  await expect(page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" })).toBeVisible();
-  await logout(page);
-
-  try {
-    await page.goto("/registrieren");
-    await expect(page.getByLabel("Deine Gruppe")).toHaveCount(0);
-    const code = randomCodeStem();
-    await register(page, { codeStem: code });
-    await expect(page.getByText("Deine Gruppe fehlt noch.")).toHaveCount(0);
-    await expect(page.getByText(new RegExp(`dein persönlicher Code ist ${code}-[A-Z]`))).toBeVisible();
-    await page.goto("/profil");
-    await expect(page.getByText("Noch nicht eingetragen")).toHaveCount(0);
-    await logout(page);
-  } finally {
-    await loginAsAdmin(page);
-    await page.goto("/admin/studie");
-    await page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" }).click();
-    await expect(page.getByRole("button", { name: "Zufällige Zuordnung einschalten" })).toBeVisible();
-  }
-});
-
-test("Admin sieht den Code und ändert die Gruppe", async ({ page }) => {
-  await loginAsAdmin(page);
-  const row = page.getByRole("link", { name: new RegExp(userName) });
-  await expect(row).toContainText(`${stem}-Z`);
-
-  await row.click();
-  await page.getByLabel("Gruppe", { exact: true }).selectOption({ label: "Gruppe Y – E2E Gruppe Y" });
-  await expect(page.getByText(`${stem}-Y`)).toBeVisible();
+  await expect(page.getByRole("menu")).not.toContainText("Gruppe");
+  await page.getByRole("menuitem", { name: "Persönlicher Code" }).click();
+  await expect(page.getByText(stem, { exact: true })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Gruppe");
 });
 
 test("Admin weist Gruppen gesammelt zu", async ({ page }) => {
@@ -113,6 +65,52 @@ test("Admin weist Gruppen gesammelt zu", async ({ page }) => {
   await expect(report).toContainText("Zeile 2: „AB-99-CD A“ ist kein gültiger Code mit Gruppe.");
   await expect(report).toContainText("Zeile 3: „kein code“ ist kein gültiger Code mit Gruppe.");
   await expect(page.getByRole("link", { name: new RegExp(userName) })).toContainText(`${stem}-Z`);
+});
+
+test("Admin sieht den Code und ändert die Gruppe", async ({ page }) => {
+  await loginAsAdmin(page);
+  const row = page.getByRole("link", { name: new RegExp(userName) });
+  await expect(row).toContainText(`${stem}-Z`);
+
+  await row.click();
+  await page.getByLabel("Gruppe", { exact: true }).selectOption({ label: "Gruppe Y – E2E Gruppe Y" });
+  await expect(page.getByText(`${stem}-Y`)).toBeVisible();
+});
+
+test("Auch mit Gruppe sehen Teilnehmende sie nirgends", async ({ page }) => {
+  await login(page, userName);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("Deine Teilnahme wird vorbereitet.")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Gruppe");
+  await page.goto("/profil");
+  await expect(page.getByText(stem, { exact: true })).toBeVisible();
+  await expect(page.getByText(`${stem}-Y`)).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Gruppe");
+});
+
+test("Bei zufälliger Zuordnung bekommen neue Teilnehmende sofort eine Gruppe, sehen sie aber nicht", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/admin/studie");
+  await page.getByRole("button", { name: "Zufällige Zuordnung einschalten" }).click();
+  await expect(page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" })).toBeVisible();
+  await logout(page);
+
+  try {
+    const code = randomCodeStem();
+    await register(page, { codeStem: code });
+    await expect(page.getByText("Deine Teilnahme wird vorbereitet.")).toHaveCount(0);
+    await expect(page.getByText(`Dein persönlicher Code ist ${code}.`)).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Gruppe");
+    await page.goto("/profil");
+    await expect(page.getByText(code, { exact: true })).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Gruppe");
+    await logout(page);
+  } finally {
+    await loginAsAdmin(page);
+    await page.goto("/admin/studie");
+    await page.getByRole("button", { name: "Zufällige Zuordnung ausschalten" }).click();
+    await expect(page.getByRole("button", { name: "Zufällige Zuordnung einschalten" })).toBeVisible();
+  }
 });
 
 test("Doppelte Codes fallen auf und lassen sich korrigieren", async ({ page }) => {
@@ -187,7 +185,7 @@ test("Konten ohne Code müssen ihn zuerst nachtragen", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/profil");
-  await expect(page.getByText(`${code}-?`)).toBeVisible();
+  await expect(page.getByText(code, { exact: true })).toBeVisible();
 });
 
 test("Teilnehmende beenden ihre Teilnahme selbst, die Studienleitung erfährt Name und Code", async ({ page }) => {

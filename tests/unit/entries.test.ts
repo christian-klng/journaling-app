@@ -81,7 +81,9 @@ describe("toEntryDto", () => {
       ["audio", null, 2],
       ["scale", 7, 0],
     ]);
-    expect(dto).toMatchObject({ questionnaireName: "Check-In", weekNumber: 2, groupLetter: "A" });
+    expect(dto).toMatchObject({ questionnaireName: "Check-In", weekNumber: 2 });
+    // Das DTO geht auch an Teilnehmende, die ihre Gruppe nie sehen sollen
+    expect(JSON.stringify(dto)).not.toMatch(/"letter"|groupLetter|intern/);
   });
 
   it("zeigt den Text, den die Person beim Antworten gesehen hat", () => {

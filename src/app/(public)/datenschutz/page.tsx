@@ -55,8 +55,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Persönlicher Code:</strong> die ersten zwei Buchstaben des Vornamens deiner Mutter,
-            dein Geburtsmonat, die ersten zwei Buchstaben deines Geburtsortes und deine Gruppe. Mit dem
-            Code lassen sich deine Antworten mit anderen Befragungen dieser Studie verbinden, ohne dass
+            dein Geburtsmonat und die ersten zwei Buchstaben deines Geburtsortes. Die Studienleitung
+            ergänzt ihn um die Gruppe, der sie dich zuordnet. Mit dem Code lassen sich deine Antworten mit anderen Befragungen dieser Studie verbinden, ohne dass
             jemand deinen Namen kennt.
           </li>
           <li>

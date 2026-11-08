@@ -19,6 +19,7 @@ export type EntryWithRecordings = Entry & {
   recordings: Recording[];
   answers: Answer[];
   questionnaire: { name: string; items: QuestionnaireItem[] } | null;
+  /** Nur für Admins; gehört nie in das EntryDto, das auch Teilnehmende bekommen */
   studyGroup: StudyGroup | null;
 };
 
@@ -52,7 +53,6 @@ export type EntryDto = {
   questionnaireName: string | null;
   weekStart: string | null;
   weekNumber: number | null;
-  groupLetter: string | null;
   /** Es wird noch transkribiert, die Ansicht soll weiter nachfragen */
   pending: boolean;
   parts: EntryPartDto[];
@@ -106,7 +106,6 @@ export function toEntryDto(entry: EntryWithRecordings, studyStart: string | null
     questionnaireName: entry.questionnaire?.name ?? null,
     weekStart: entry.weekStart,
     weekNumber: entry.weekStart && studyStart ? weekNumber(entry.weekStart, studyStart) : null,
-    groupLetter: entry.studyGroup?.letter ?? null,
     pending: entry.recordings.some((r) => r.status === "uploaded" || r.status === "transcribing"),
     parts: [...parts.values()].sort((a, b) => position(a.itemId) - position(b.itemId)),
     recordings: entry.recordings.filter((r) => !r.itemId).map(toRecordingDto),

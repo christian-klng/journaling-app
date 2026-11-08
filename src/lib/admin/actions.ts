@@ -25,7 +25,7 @@ import { deleteParticipantAccount } from "@/lib/study/delete-account";
 
 export type ActionState = { error?: string; ok?: boolean } | undefined;
 
-/** Admins können die Gruppe jederzeit setzen oder entfernen, Teilnehmende nur einmal selbst. */
+/** Nur Admins setzen oder entfernen die Gruppe; Teilnehmende sehen sie nie. */
 export async function assignStudyGroup(userId: string, formData: FormData) {
   await assertAdmin();
   const groupId = String(formData.get("groupId") ?? "");

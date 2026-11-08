@@ -26,8 +26,8 @@ export default async function StudyPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-semibold">Studie</h1>
         <p className="text-sm text-muted">
-          Gruppen und ihre Abfragen. Teilnehmende sehen nur die Abfragen ihrer eigenen Gruppe, nie die
-          interne Bezeichnung.
+          Gruppen und ihre Abfragen. Teilnehmende sehen nur die Abfragen ihrer eigenen Gruppe, aber nie,
+          in welcher Gruppe sie sind.
         </p>
       </div>
 
@@ -51,8 +51,8 @@ export default async function StudyPage() {
             <h2 className="font-semibold">Zufällige Zuordnung zu einer Gruppe</h2>
             <p className="text-sm text-muted">
               {randomGroups
-                ? "Eingeschaltet. Neue Teilnehmende kommen bei der Registrierung in die Gruppe mit den wenigsten Personen, bei Gleichstand per Los, und können sofort starten. Selbst wählen können sie ihre Gruppe nicht."
-                : "Ausgeschaltet. Teilnehmende tragen ihre Gruppe selbst ein, oder die Studienleitung weist sie in der Übersicht zu."}{" "}
+                ? "Eingeschaltet. Neue Teilnehmende kommen bei der Registrierung in die Gruppe mit den wenigsten Personen, bei Gleichstand per Los, und können sofort starten."
+                : "Ausgeschaltet. Neue Teilnehmende sind zunächst ohne Gruppe und sehen noch keine Fragen, bis die Studienleitung sie in der Übersicht zuweist."}{" "}
               Bereits Registrierte behalten ihre Gruppe. Personen ohne Gruppe weist du in der Übersicht
               zu.
             </p>

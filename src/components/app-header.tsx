@@ -5,11 +5,8 @@ export function AppHeader({
   displayName,
   home,
   nav = [],
-  groupMissing = false,
 }: {
   displayName: string;
-  /** Teilnehmende ohne Gruppe sehen am Menü einen roten Punkt */
-  groupMissing?: boolean;
   home: "/" | "/admin";
   nav?: { href: string; label: string }[];
 }) {
@@ -30,7 +27,7 @@ export function AppHeader({
           </nav>
         )}
         <div className="ml-auto sm:ml-0">
-          <UserMenu displayName={displayName} profile={home === "/"} groupMissing={groupMissing} />
+          <UserMenu displayName={displayName} profile={home === "/"} />
         </div>
       </div>
     </header>

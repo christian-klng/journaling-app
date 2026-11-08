@@ -6,7 +6,7 @@
  * Fassung der Einwilligung. Bei jeder inhaltlichen Änderung des Einwilligungstextes, der
  * Datenschutzinformation oder der Studienbedingungen erhöhen; gespeichert wird sie bei der Registrierung.
  */
-export const CONSENT_VERSION = "3";
+export const CONSENT_VERSION = "4";
 
 type Person = { name: string; role: string };
 
