@@ -3,6 +3,7 @@
 import type { EntryDto, RecordingDto } from "@/lib/entries";
 import { formatDuration, formatTime } from "@/lib/format";
 import { SCALE_MAX, SMILEYS } from "@/lib/study/config";
+import { Markdown } from "./markdown";
 import { Card, Spinner } from "./ui";
 import { useLiveEntry } from "./use-live-entry";
 
@@ -14,7 +15,7 @@ export function EntryView({ initial }: { initial: EntryDto }) {
     <div className="space-y-4">
       {entry.parts.map((part) => (
         <Card key={part.itemId} className="space-y-3">
-          <p className="font-medium">{part.text}</p>
+          <Markdown text={part.text} className="font-medium" />
           {part.type === "smiley" && part.value !== null && <SmileyValue value={part.value} />}
           {part.type === "scale" && part.value !== null && (
             <p>

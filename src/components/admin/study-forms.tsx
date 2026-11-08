@@ -17,6 +17,8 @@ import {
 } from "@/lib/study/actions";
 import { ITEM_TYPE_LABELS, ITEM_TYPES, WEEKDAYS, type ItemTypeKey } from "@/lib/study/config";
 
+const FORMAT_HINT = "Formatierung: **fett**, *kursiv*, Zeilen mit „- “ oder „1. “ werden zur Liste.";
+
 function Saved({ state, pending, text = "Gespeichert" }: { state: ActionState; pending: boolean; text?: string }) {
   if (!state?.ok || pending) return null;
   return (
@@ -154,7 +156,7 @@ export function QuestionnaireForm({ questionnaire }: { questionnaire: Questionna
         <input name="name" required maxLength={60} defaultValue={questionnaire.name} className={inputClass} />
       </Field>
       <WeekdayFields opensOn={questionnaire.opensOn} closesOn={questionnaire.closesOn} />
-      <Field label="Einleitung" hint="Erscheint vor dem ersten Element. Leer lassen, wenn es keine braucht.">
+      <Field label="Einleitung" hint={`Erscheint vor dem ersten Element. Leer lassen, wenn es keine braucht. ${FORMAT_HINT}`}>
         <textarea name="intro" maxLength={2000} rows={3} defaultValue={questionnaire.intro} className={textareaClass} />
       </Field>
       <ErrorMessage>{state?.error}</ErrorMessage>
@@ -171,7 +173,7 @@ export function QuestionnaireForm({ questionnaire }: { questionnaire: Questionna
 function ItemFields({ type, item }: { type: ItemTypeKey; item?: QuestionnaireItem }) {
   return (
     <>
-      <Field label={type === "audio" ? "Frage" : "Frage bzw. Aussage"}>
+      <Field label={type === "audio" ? "Frage" : "Frage bzw. Aussage"} hint={FORMAT_HINT}>
         <textarea name="text" required maxLength={500} rows={2} defaultValue={item?.text} className={textareaClass} />
       </Field>
       {type === "scale" && (

@@ -130,7 +130,7 @@ export async function setupStudy(page: Page) {
         questionnaires: [
           {
             name: FLOW_QUESTIONNAIRE,
-            intro: "Bitte beantworte die folgenden Fragen.",
+            intro: "Bitte beantworte die **folgenden** Fragen.\n- ehrlich\n- spontan",
             opensOn: 1,
             closesOn: 7,
             items: [

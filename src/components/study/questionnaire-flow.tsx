@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { completeEntry, saveAnswer, startEntry } from "@/lib/study/entry-actions";
+import { Markdown } from "../markdown";
 import { Button, Card, ErrorMessage } from "../ui";
 import { AudioAnswer } from "./audio-answer";
 import { NumberScale, SmileyScale } from "./scales";
@@ -104,7 +105,7 @@ export function QuestionnaireFlow({
     return (
       <div className="space-y-6">
         {header}
-        {questionnaire.intro && <p className="whitespace-pre-wrap leading-relaxed">{questionnaire.intro}</p>}
+        {questionnaire.intro && <Markdown text={questionnaire.intro} className="leading-relaxed" />}
         <p className="text-sm text-muted">
           {items.length === 1 ? "1 Frage" : `${items.length} Fragen`}. Deine Antworten werden sofort
           gespeichert, du kannst also jederzeit unterbrechen und später weitermachen.
@@ -130,12 +131,15 @@ export function QuestionnaireFlow({
                 <span aria-hidden className={answered(item) ? "text-accent-ink" : "text-muted"}>
                   {answered(item) ? "✓" : "–"}
                 </span>
-                <span className="text-sm">
-                  {item.text}
-                  {!answered(item) && (
-                    <span className="text-muted">{item.required ? " (fehlt noch)" : " (übersprungen)"}</span>
-                  )}
-                </span>
+                <Markdown
+                  text={item.text}
+                  className="min-w-0 text-sm"
+                  after={
+                    !answered(item) && (
+                      <span className="text-muted">{item.required ? " (fehlt noch)" : " (übersprungen)"}</span>
+                    )
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -179,10 +183,11 @@ export function QuestionnaireFlow({
         {header}
         {progress}
         <Card className="space-y-4">
-          <p className="text-lg font-medium leading-snug">
-            {item.text}
-            {!item.required && <span className="font-normal text-muted"> (optional)</span>}
-          </p>
+          <Markdown
+            text={item.text}
+            className="text-lg font-medium leading-snug"
+            after={!item.required && <span className="font-normal text-muted"> (optional)</span>}
+          />
           <AudioAnswer
             key={item.id}
             entryId={entryId!}

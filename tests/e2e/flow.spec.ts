@@ -46,7 +46,11 @@ test("Die Startseite zeigt die offene Abfrage und die verpasste ausgegraut", asy
 test("Teilnehmende füllen die Abfrage Schritt für Schritt aus", async ({ page }) => {
   await register(page, { group: FLOW_GROUP });
   await page.getByRole("link", { name: new RegExp(`${FLOW_QUESTIONNAIRE} starten`) }).click();
+  // Die Einleitung ist Markdown: fett und eine Liste, ohne Sternchen und Bindestriche
   await expect(page.getByText("Bitte beantworte die folgenden Fragen.")).toBeVisible();
+  await expect(page.locator("strong", { hasText: "folgenden" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "spontan" })).toBeVisible();
+  await expect(page.getByText("**")).toHaveCount(0);
   await page.getByRole("button", { name: "Los geht's" }).click();
 
   // Pflicht-Skala: ohne Auswahl geht es nicht weiter

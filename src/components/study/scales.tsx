@@ -1,4 +1,5 @@
 import { SCALE_MAX, SCALE_MIN, SMILEYS } from "@/lib/study/config";
+import { Markdown } from "../markdown";
 
 // Echte Radio-Buttons, damit die Skalen ohne JavaScript, mit Tastatur und Screenreader funktionieren.
 // Das Feld selbst ist unsichtbar, die Auswahl zeigt das umgebende Label über :has(:checked).
@@ -7,12 +8,17 @@ const optionClass =
   "transition-colors hover:border-accent has-[:checked]:border-accent has-[:checked]:bg-accent-soft " +
   "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
 
-function Legend({ text, required }: { text: string; required: boolean }) {
+// Statt <legend>, weil die Frage Listen enthalten kann; das Feld bekommt seinen Namen über aria-labelledby
+const questionId = (name: string) => `${name}-frage`;
+
+function Question({ name, text, required }: { name: string; text: string; required: boolean }) {
   return (
-    <legend className="mb-3 font-medium">
-      {text}
-      {!required && <span className="font-normal text-muted"> (optional)</span>}
-    </legend>
+    <Markdown
+      id={questionId(name)}
+      text={text}
+      className="mb-3 font-medium"
+      after={!required && <span className="font-normal text-muted"> (optional)</span>}
+    />
   );
 }
 
@@ -28,8 +34,8 @@ export function SmileyScale({
   defaultValue?: number | null;
 }) {
   return (
-    <fieldset>
-      <Legend text={question} required={required} />
+    <fieldset aria-labelledby={questionId(name)}>
+      <Question name={name} text={question} required={required} />
       <div className="grid grid-cols-5 gap-2">
         {SMILEYS.map((smiley) => (
           <label key={smiley.value} className={`${optionClass} min-h-20 gap-1 px-1 py-2`}>
@@ -69,8 +75,8 @@ export function NumberScale({
 }) {
   const values = Array.from({ length: SCALE_MAX - SCALE_MIN + 1 }, (_, i) => SCALE_MIN + i);
   return (
-    <fieldset>
-      <Legend text={question} required={required} />
+    <fieldset aria-labelledby={questionId(name)}>
+      <Question name={name} text={question} required={required} />
       <div className="grid grid-cols-11 gap-1">
         {values.map((value) => (
           <label key={value} className={`${optionClass} min-h-11 text-sm font-medium tabular-nums`}>

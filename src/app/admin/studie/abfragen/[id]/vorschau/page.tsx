@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Markdown } from "@/components/markdown";
 import { MicIcon } from "@/components/study/mic-icon";
 import { NumberScale, SmileyScale } from "@/components/study/scales";
 import { buttonClass, Card, Notice } from "@/components/ui";
@@ -30,7 +31,7 @@ export default async function PreviewPage({ params }: PageProps<"/admin/studie/a
       </div>
 
       <h1 className="text-xl font-semibold">{questionnaire.name}</h1>
-      {questionnaire.intro && <p className="whitespace-pre-wrap leading-relaxed">{questionnaire.intro}</p>}
+      {questionnaire.intro && <Markdown text={questionnaire.intro} className="leading-relaxed" />}
 
       {items.map((item) =>
         item.type === "smiley" ? (
@@ -46,10 +47,11 @@ export default async function PreviewPage({ params }: PageProps<"/admin/studie/a
           />
         ) : (
           <Card key={item.id} className="space-y-3">
-            <p className="font-medium">
-              {item.text}
-              {!item.required && <span className="font-normal text-muted"> (optional)</span>}
-            </p>
+            <Markdown
+              text={item.text}
+              className="font-medium"
+              after={!item.required && <span className="font-normal text-muted"> (optional)</span>}
+            />
             <span aria-disabled className={`${buttonClass("primary")} pointer-events-none w-full opacity-60`}>
               <MicIcon className="size-5" />
               Antwort aufnehmen
